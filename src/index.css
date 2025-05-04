@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -13,11 +14,11 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 221.2 83.2% 53.3%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 263.4 70% 50.4%;
+    --secondary-foreground: 210 40% 98%;
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
@@ -30,25 +31,9 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: 221.2 83.2% 53.3%;
 
     --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
@@ -61,10 +46,10 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
     --primary-foreground: 222.2 47.4% 11.2%;
 
-    --secondary: 217.2 32.6% 17.5%;
+    --secondary: 263.4 70% 50.4%;
     --secondary-foreground: 210 40% 98%;
 
     --muted: 217.2 32.6% 17.5%;
@@ -78,15 +63,7 @@
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --ring: 224.3 76.3% 48%;
   }
 }
 
@@ -96,6 +73,94 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-tight;
+  }
+
+  h1 {
+    @apply text-4xl md:text-5xl lg:text-6xl font-bold;
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl font-bold;
+  }
+
+  h3 {
+    @apply text-2xl md:text-3xl font-semibold;
+  }
+
+  h4 {
+    @apply text-xl md:text-2xl font-semibold;
+  }
+}
+
+.glass-effect {
+  @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-lg;
+}
+
+.timeline-node {
+  @apply relative flex items-center justify-center w-16 h-16 rounded-full 
+    bg-white shadow-lg border-4 border-white z-10 transition-all 
+    hover:scale-110 focus:scale-110;
+}
+
+.timeline-node.active {
+  @apply border-apple-blue ring-2 ring-apple-blue ring-offset-2;
+}
+
+.timeline-line {
+  @apply absolute top-1/2 h-0.5 bg-gray-300 z-0;
+  left: 50%;
+  width: 100%;
+  transform: translateX(-50%);
+}
+
+.timeline-container {
+  @apply relative flex items-center justify-between w-full max-w-4xl px-4 py-8;
+}
+
+@layer components {
+  .hero-button {
+    @apply inline-flex items-center justify-center px-6 py-3 text-base font-medium transition-all 
+    rounded-full bg-apple-blue text-white hover:bg-blue-700 focus:outline-none focus:ring-2 
+    focus:ring-blue-500 focus:ring-offset-2 shadow-md;
+  }
+  
+  .hero-button-secondary {
+    @apply inline-flex items-center justify-center px-6 py-3 text-base font-medium transition-all 
+    rounded-full bg-white text-apple-blue border border-apple-blue hover:bg-gray-50 
+    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm;
+  }
+
+  .apple-card {
+    @apply relative overflow-hidden rounded-2xl bg-white shadow-md hover:shadow-lg
+    transition-all duration-300 border border-gray-100;
+  }
+
+  .nav-link {
+    @apply relative px-4 py-2 text-sm font-medium text-apple-gray hover:text-apple-blue 
+    transition-colors duration-200 after:content-[''] after:absolute after:w-full after:scale-x-0 
+    after:h-0.5 after:bottom-0 after:left-0 after:bg-apple-blue after:origin-bottom-right 
+    after:transition-transform after:duration-300 hover:after:scale-x-100 
+    hover:after:origin-bottom-left;
+  }
+
+  .nav-link.active {
+    @apply text-apple-blue after:scale-x-100 after:origin-bottom-left;
+  }
+
+  .feature-card {
+    @apply flex flex-col items-center p-6 text-center transition-all duration-300
+    hover:transform hover:-translate-y-1;
+  }
+  
+  .feature-icon {
+    @apply flex items-center justify-center w-16 h-16 mb-4 rounded-full
+    bg-apple-light-purple text-apple-purple;
   }
 }
