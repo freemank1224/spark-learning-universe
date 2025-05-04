@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { Book, Code, Rocket, Clock, Users, Star } from 'lucide-react';
+import { Book, Code, Rocket, Clock, Users, Star, ArrowRight } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
 const AboutSection = ({ children, className = '' }: { children: React.ReactNode, className?: string }) => {
