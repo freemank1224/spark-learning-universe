@@ -77,13 +77,13 @@ const Courses = () => {
     {
       id: '2',
       sender: 'user',
-      content: 'I'm excited to learn about flight! How do birds stay in the air?',
+      content: "I'm excited to learn about flight! How do birds stay in the air?",
       timestamp: new Date(),
     },
     {
       id: '3',
       sender: 'scientist',
-      content: 'An excellent question! Birds stay aloft through a delicate balance of four forces: lift, weight, thrust, and drag. Let's examine these forces using mathematical principles.',
+      content: 'An excellent question! Birds stay aloft through a delicate balance of four forces: lift, weight, thrust, and drag. Let\'s examine these forces using mathematical principles.',
       timestamp: new Date(),
       senderName: 'Leonardo da Vinci',
       profileImage: profileImages.leonardo
