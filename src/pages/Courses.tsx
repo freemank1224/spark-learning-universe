@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
-import { Clock, FileText, Code, Settings, Share2, User, BellRing, X, Image, Plus } from 'lucide-react';
+import { Clock, FileText, Code, Settings, Share2, User, BellRing, X, Image, Plus, BookOpen } from 'lucide-react';
 import CourseSidebar from '@/components/courses/CourseSidebar';
 import ChatInterface from '@/components/courses/ChatInterface';
 import QuestionPanel from '@/components/courses/QuestionPanel';
