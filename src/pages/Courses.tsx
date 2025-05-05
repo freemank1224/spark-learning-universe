@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -21,7 +20,8 @@ import {
   User,
   BellRing,
   CheckCircle,
-  X
+  X,
+  Image
 } from 'lucide-react';
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +35,27 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
+import { 
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger 
+} from "@/components/ui/hover-card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 // Import profile images
 const profileImages = {
@@ -43,6 +64,9 @@ const profileImages = {
   ada: "https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=120&h=120&q=80",
   ai: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=120&h=120&q=80",
 };
+
+// AI generated content image
+const aiGeneratedImage = "https://images.unsplash.com/photo-1576502200916-3808e07386a5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
 
 interface Task {
   id: string;
@@ -384,24 +408,58 @@ const Courses = () => {
         
         {/* Middle Column - Chat Interface */}
         <section className="dialogue-section w-full md:w-3/5 h-[calc(100vh-4rem)]">
-          <div className="h-full flex flex-col">
-            {/* Dynamic Banner Area */}
-            <div className="dynamic-banner w-full h-[25vh] relative overflow-hidden">
+          <div className="h-full flex flex-col relative">
+            {/* AI-Generated Content Image Area */}
+            <div className="w-full h-[30vh] relative overflow-hidden">
               <div 
                 className="absolute inset-0 bg-cover bg-center parallax-bg"
                 style={{ 
-                  backgroundImage: `url('https://images.unsplash.com/photo-1576502200916-3808e07386a5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80')`,
+                  backgroundImage: `url('${aiGeneratedImage}')`,
                   transform: 'translateY(0px)'
                 }}
-              ></div>
+              >
+                {/* Add overlay for potential AI image integration */}
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      className="absolute top-2 right-2 bg-theme-dark/40 hover:bg-theme-dark/60 backdrop-blur-sm border-theme-stone/30"
+                    >
+                      <Image className="h-4 w-4 text-theme-cream" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-theme-dark border-theme-stone/20">
+                    <DialogHeader>
+                      <DialogTitle className="text-theme-cream">AI-Generated Scene</DialogTitle>
+                      <DialogDescription className="text-theme-stone">
+                        This image is dynamically generated based on your current learning context.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex flex-col space-y-4">
+                      <div className="rounded-md overflow-hidden">
+                        <img 
+                          src={aiGeneratedImage} 
+                          alt="AI generated scene visualization" 
+                          className="w-full h-auto" 
+                        />
+                      </div>
+                      <p className="text-sm text-theme-stone">
+                        The image depicts Leonardo da Vinci's workshop in Florence, where he conducted 
+                        his pioneering studies on flight and aerodynamics.
+                      </p>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
               <div className="absolute inset-0 bg-gradient-to-b from-transparent to-theme-dark"></div>
               
-              <div className="absolute bottom-4 left-4 glass-effect px-3 py-2 rounded-md">
+              <div className="absolute bottom-4 left-4 backdrop-blur-md bg-theme-dark/40 px-3 py-2 rounded-md border border-theme-stone/20">
                 <span className="text-xs font-medium text-theme-cream">Renaissance Era • Chapter 2</span>
               </div>
             </div>
             
-            <div className="glass-effect px-4 py-2 border-b border-theme-stone/20">
+            <div className="backdrop-blur-md bg-theme-dark/60 px-4 py-2 border-b border-theme-stone/20">
               <h2 className="text-xl font-semibold text-theme-cream">Learning with Leonardo da Vinci</h2>
               <div className="flex items-center space-x-2 text-theme-stone text-sm">
                 <Clock className="h-4 w-4" />
@@ -412,7 +470,7 @@ const Courses = () => {
             <div 
               id="message-container"
               className="flex-grow overflow-y-auto p-4 space-y-4"
-              style={{ maxHeight: 'calc(75vh - 60px)' }}
+              style={{ maxHeight: 'calc(70vh - 60px)' }}
             >
               {messages.map((message) => (
                 <div 
@@ -469,18 +527,19 @@ const Courses = () => {
               ))}
             </div>
             
-            <div className="p-3 border-t border-theme-stone/20">
-              <div className="relative">
+            {/* Floating Chat Input with Glassmorphism Effect */}
+            <div className="absolute bottom-6 left-0 right-0 px-4">
+              <div className="relative backdrop-blur-lg bg-theme-dark/40 border border-theme-stone/30 rounded-full shadow-lg">
                 <input
                   type="text"
                   placeholder="Type your message..."
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                  className="w-full bg-theme-dark/60 border border-theme-stone/30 rounded-full px-4 py-2 pr-24 text-theme-cream placeholder-theme-stone focus:outline-none focus:ring-1 focus:ring-theme-glow"
+                  className="w-full bg-transparent rounded-full px-4 py-3 pr-24 text-theme-cream placeholder-theme-stone/70 focus:outline-none"
                 />
                 
-                <div className="absolute right-2 top-1 flex items-center space-x-1">
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center space-x-1">
                   <button 
                     onClick={toggleRecording}
                     className={`p-2 rounded-full ${isRecording ? 'bg-theme-coral text-white' : 'bg-theme-stone/20 text-theme-stone hover:bg-theme-stone/30'}`}
@@ -495,6 +554,47 @@ const Courses = () => {
                     <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>
+                
+                {/* Hover Card for Input Suggestions */}
+                <HoverCard>
+                  <HoverCardTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="absolute left-2 top-1/2 -translate-y-1/2 text-theme-stone hover:text-theme-cream hover:bg-transparent"
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </HoverCardTrigger>
+                  <HoverCardContent className="w-80 bg-theme-dark border-theme-stone/30 backdrop-blur-lg">
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium text-theme-cream">Suggested Questions</h4>
+                      <div className="space-y-1">
+                        <Button 
+                          variant="ghost" 
+                          className="w-full justify-start text-left text-theme-stone text-xs hover:text-theme-cream"
+                          onClick={() => setNewMessage("How did you design your flying machine?")}
+                        >
+                          How did you design your flying machine?
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          className="w-full justify-start text-left text-theme-stone text-xs hover:text-theme-cream"
+                          onClick={() => setNewMessage("What is Bernoulli's principle and how does it relate to flight?")}
+                        >
+                          What is Bernoulli's principle and how does it relate to flight?
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          className="w-full justify-start text-left text-theme-stone text-xs hover:text-theme-cream"
+                          onClick={() => setNewMessage("Can you explain the difference between lift and thrust?")}
+                        >
+                          Can you explain the difference between lift and thrust?
+                        </Button>
+                      </div>
+                    </div>
+                  </HoverCardContent>
+                </HoverCard>
               </div>
             </div>
           </div>
