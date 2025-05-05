@@ -1,11 +1,15 @@
-
 import { Volume2, BookOpen, Code, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import Draggable from '@/components/ui/draggable';
 
 const AIAssistantButton = () => {
   return (
-    <div className="fixed bottom-20 right-6 z-50">
+    <Draggable 
+      initialPosition={{ x: window.innerWidth - 80, y: window.innerHeight - 160 }}
+      bounds="body"
+      zIndex={50}
+    >
       <Sheet>
         <SheetTrigger asChild>
           <Button className="h-14 w-14 rounded-full bg-theme-teal/90 backdrop-blur-sm hover:bg-theme-teal shadow-lg">
@@ -46,7 +50,7 @@ const AIAssistantButton = () => {
           </div>
         </SheetContent>
       </Sheet>
-    </div>
+    </Draggable>
   );
 };
 
