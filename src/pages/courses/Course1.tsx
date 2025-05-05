@@ -57,7 +57,7 @@ interface Question {
   isOpen: boolean;
 }
 
-const Courses = () => {
+const Course1 = () => {
   const [loading, setLoading] = useState(true);
   const [currentTool, setCurrentTool] = useState<string | null>(null);
   const [questionOpen, setQuestionOpen] = useState(false);
@@ -260,4 +260,4 @@ const Courses = () => {
   );
 };
 
-export default Courses;
+export default Course1;
