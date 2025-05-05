@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -21,7 +22,8 @@ import {
   BellRing,
   CheckCircle,
   X,
-  Image
+  Image,
+  Plus
 } from 'lucide-react';
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -114,6 +116,7 @@ const Courses = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [questionOpen, setQuestionOpen] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
+  const [toolbarOpen, setToolbarOpen] = useState(false);
   
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -239,6 +242,10 @@ const Courses = () => {
     }
   };
 
+  const toggleToolbar = () => {
+    setToolbarOpen(!toolbarOpen);
+  };
+
   const openQuestion = (question: Question) => {
     setCurrentQuestion({...question, isOpen: true});
     setQuestionOpen(true);
@@ -308,25 +315,25 @@ const Courses = () => {
 
   return (
     <div className="course-content-page min-h-screen flex flex-col bg-theme-dark">
-      {/* Header - Fixed at top */}
+      {/* Header - Fixed at top with highest z-index */}
       <Header />
       
       {/* Main Content - Three Column Layout */}
       <div className="flex-grow flex flex-col md:flex-row pt-16">
         {/* Left Column - Course Information */}
-        <section className="course-sidebar w-full md:w-1/5 bg-theme-dark/90 border-r border-theme-stone/20 overflow-y-auto">
+        <section className="course-sidebar w-full md:w-1/5 bg-theme-dark/90 backdrop-blur-md border-r border-theme-stone/20 overflow-y-auto">
           <div className="h-full flex flex-col p-4 space-y-6">
             {/* Course Title and Progress */}
-            <div className="space-y-3">
+            <div className="space-y-3 neo-blur rounded-lg p-4">
               <h2 className="text-xl font-semibold text-theme-cream">Flight Principles</h2>
               <div className="flex items-center justify-between text-sm text-theme-stone">
                 <span>Renaissance Era • Chapter 2</span>
-                <Badge className="bg-theme-navy text-theme-cream">35%</Badge>
+                <Badge className="bg-theme-navy/80 text-theme-cream">35%</Badge>
               </div>
               <Progress value={35} className="h-1.5 bg-theme-stone/30" />
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-2 neo-blur rounded-lg p-4">
               <h3 className="text-md font-medium text-theme-cream flex items-center">
                 <BookOpen className="h-4 w-4 mr-2" />
                 Current Tasks
@@ -343,7 +350,7 @@ const Courses = () => {
               </div>
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-2 neo-blur rounded-lg p-4">
               <h3 className="text-md font-medium text-theme-cream flex items-center">
                 <CheckCircle className="h-4 w-4 mr-2" />
                 Achievements
@@ -366,7 +373,7 @@ const Courses = () => {
               </div>
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-2 neo-blur rounded-lg p-4">
               <h3 className="text-md font-medium text-theme-cream flex items-center">
                 <Clock className="h-4 w-4 mr-2" />
                 Learning Path
@@ -374,7 +381,7 @@ const Courses = () => {
               
               <div className="space-y-2">
                 <Collapsible>
-                  <CollapsibleTrigger className="flex items-center justify-between w-full p-2 rounded bg-theme-dark/50 border border-theme-stone/10">
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-2 rounded bg-theme-navy/40 backdrop-blur-sm border border-theme-stone/10">
                     <span className="text-theme-glow text-sm font-medium">Renaissance Module</span>
                     <ChevronDown className="h-4 w-4 text-theme-stone" />
                   </CollapsibleTrigger>
@@ -394,11 +401,11 @@ const Courses = () => {
                   </CollapsibleContent>
                 </Collapsible>
                 
-                <div className="p-2 rounded bg-theme-dark/50 border border-theme-stone/10 text-theme-stone text-sm font-medium">
+                <div className="p-2 rounded bg-theme-dark/50 backdrop-blur-sm border border-theme-stone/10 text-theme-stone text-sm font-medium">
                   Industrial Revolution Module
                 </div>
                 
-                <div className="p-2 rounded bg-theme-dark/50 border border-theme-stone/10 text-theme-stone text-sm font-medium">
+                <div className="p-2 rounded bg-theme-dark/50 backdrop-blur-sm border border-theme-stone/10 text-theme-stone text-sm font-medium">
                   Digital Age Module
                 </div>
               </div>
@@ -490,11 +497,11 @@ const Courses = () => {
                   )}
                   
                   <div 
-                    className={`max-w-[80%] rounded-2xl px-4 py-2 ${
+                    className={`max-w-[80%] rounded-2xl px-4 py-2 backdrop-blur-md ${
                       message.sender === 'user' 
-                        ? 'bg-theme-navy text-theme-cream rounded-br-none' 
+                        ? 'bg-theme-navy/80 text-theme-cream rounded-br-none' 
                         : message.sender === 'scientist'
-                          ? 'bg-theme-earth/80 text-theme-cream rounded-bl-none' 
+                          ? 'bg-theme-earth/70 text-theme-cream rounded-bl-none' 
                           : 'bg-theme-teal/30 text-theme-cream'
                     }`}
                   >
@@ -509,7 +516,7 @@ const Courses = () => {
                       <Button 
                         onClick={() => openQuestion(questions[0])} 
                         size="sm" 
-                        className="mt-2 bg-theme-navy hover:bg-theme-navy/90"
+                        className="mt-2 bg-theme-navy/90 hover:bg-theme-navy backdrop-blur-sm"
                       >
                         Answer Question
                       </Button>
@@ -527,9 +534,9 @@ const Courses = () => {
               ))}
             </div>
             
-            {/* Floating Chat Input with Glassmorphism Effect */}
-            <div className="absolute bottom-6 left-0 right-0 px-4">
-              <div className="relative backdrop-blur-lg bg-theme-dark/40 border border-theme-stone/30 rounded-full shadow-lg">
+            {/* Fixed Floating Chat Input with Glassmorphism Effect */}
+            <div className="fixed bottom-20 left-0 right-0 z-40 px-4 md:px-[calc(20%+16px)] md:pr-[calc(20%+16px)] pointer-events-none">
+              <div className="relative backdrop-blur-lg bg-theme-dark/50 border border-theme-stone/30 rounded-full shadow-lg pointer-events-auto max-w-3xl mx-auto">
                 <input
                   type="text"
                   placeholder="Type your message..."
@@ -566,7 +573,7 @@ const Courses = () => {
                       <ChevronDown className="h-4 w-4" />
                     </Button>
                   </HoverCardTrigger>
-                  <HoverCardContent className="w-80 bg-theme-dark border-theme-stone/30 backdrop-blur-lg">
+                  <HoverCardContent className="w-80 bg-theme-dark/90 border-theme-stone/30 backdrop-blur-lg">
                     <div className="space-y-2">
                       <h4 className="text-sm font-medium text-theme-cream">Suggested Questions</h4>
                       <div className="space-y-1">
@@ -601,10 +608,10 @@ const Courses = () => {
         </section>
         
         {/* Right Column - Interactive Questions */}
-        <section className={`question-panel w-full md:w-1/5 bg-theme-dark/90 border-l border-theme-stone/20 transition-all duration-300 ${questionOpen ? 'block' : 'hidden md:block'}`}>
+        <section className={`question-panel w-full md:w-1/5 bg-theme-dark/90 backdrop-blur-md border-l border-theme-stone/20 transition-all duration-300 ${questionOpen ? 'block' : 'hidden md:block'}`}>
           {questionOpen && currentQuestion ? (
             <div className="h-full flex flex-col">
-              <div className="flex items-center justify-between bg-theme-navy p-3 border-b border-theme-stone/20">
+              <div className="flex items-center justify-between bg-theme-navy/80 backdrop-blur-md p-3 border-b border-theme-stone/20">
                 <h3 className="text-lg font-semibold text-theme-cream">{currentQuestion.title}</h3>
                 <Button variant="ghost" size="icon" onClick={closeQuestion}>
                   <X className="h-5 w-5 text-theme-cream" />
@@ -618,7 +625,7 @@ const Courses = () => {
                   {currentQuestion.type === 'multiple-choice' && currentQuestion.options && (
                     <div className="space-y-3 pt-2">
                       {currentQuestion.options.map((option, index) => (
-                        <div key={index} className="flex items-center space-x-2 p-2 rounded-md hover:bg-theme-stone/10 border border-theme-stone/20">
+                        <div key={index} className="flex items-center space-x-2 p-2 rounded-md hover:bg-theme-stone/10 border border-theme-stone/20 backdrop-blur-md">
                           <input 
                             type="radio" 
                             name="answer" 
@@ -634,7 +641,7 @@ const Courses = () => {
                   )}
                   
                   {currentQuestion.type === 'experiment' && (
-                    <div className="bg-theme-dark/50 rounded-lg p-4 border border-theme-stone/20">
+                    <div className="backdrop-blur-md bg-theme-dark/50 rounded-lg p-4 border border-theme-stone/20">
                       <h4 className="text-lg font-medium text-theme-cream mb-3">Wing Design Experiment</h4>
                       
                       <div className="h-48 bg-theme-dark/70 rounded flex items-center justify-center mb-4 text-theme-stone border border-theme-stone/10">
@@ -659,7 +666,7 @@ const Courses = () => {
                 <div className="pt-4">
                   <Button 
                     onClick={handleQuestionSubmit} 
-                    className="w-full bg-theme-navy hover:bg-theme-navy/90 text-theme-cream"
+                    className="w-full bg-theme-navy/80 hover:bg-theme-navy backdrop-blur-md text-theme-cream"
                   >
                     Submit Answer
                   </Button>
@@ -682,28 +689,28 @@ const Courses = () => {
       <div className="fixed bottom-20 right-6 z-50">
         <Sheet>
           <SheetTrigger asChild>
-            <Button className="h-14 w-14 rounded-full bg-theme-teal hover:bg-theme-teal/90 shadow-lg">
+            <Button className="h-14 w-14 rounded-full bg-theme-teal/90 backdrop-blur-sm hover:bg-theme-teal shadow-lg">
               <Volume2 className="h-6 w-6 text-theme-dark" />
             </Button>
           </SheetTrigger>
-          <SheetContent className="bg-theme-dark border-theme-stone/20">
+          <SheetContent className="bg-theme-dark/90 backdrop-blur-lg border-theme-stone/20">
             <div className="py-6">
               <h3 className="text-xl font-semibold text-theme-cream mb-4">Flying Code - AI Assistant</h3>
               <div className="space-y-4">
-                <div className="bg-theme-teal/20 rounded-lg p-3 border border-theme-teal/30">
+                <div className="bg-theme-teal/20 backdrop-blur-sm rounded-lg p-3 border border-theme-teal/30">
                   <p className="text-theme-cream">How can I help with your learning today?</p>
                 </div>
                 
                 <div className="space-y-2">
-                  <Button variant="outline" className="w-full justify-start text-left border-theme-stone/20 text-theme-stone">
+                  <Button variant="outline" className="w-full justify-start text-left border-theme-stone/20 text-theme-stone bg-theme-dark/50 backdrop-blur-sm">
                     <BookOpen className="h-4 w-4 mr-2" />
                     Explain the concept of lift
                   </Button>
-                  <Button variant="outline" className="w-full justify-start text-left border-theme-stone/20 text-theme-stone">
+                  <Button variant="outline" className="w-full justify-start text-left border-theme-stone/20 text-theme-stone bg-theme-dark/50 backdrop-blur-sm">
                     <Code className="h-4 w-4 mr-2" />
                     Help with the wing simulation
                   </Button>
-                  <Button variant="outline" className="w-full justify-start text-left border-theme-stone/20 text-theme-stone">
+                  <Button variant="outline" className="w-full justify-start text-left border-theme-stone/20 text-theme-stone bg-theme-dark/50 backdrop-blur-sm">
                     <Clock className="h-4 w-4 mr-2" />
                     Show my learning progress
                   </Button>
@@ -713,7 +720,7 @@ const Courses = () => {
                   <input
                     type="text"
                     placeholder="Ask Flying Code anything..."
-                    className="w-full bg-theme-dark/60 border border-theme-stone/30 rounded-full px-4 py-2 text-theme-cream"
+                    className="w-full bg-theme-dark/60 backdrop-blur-sm border border-theme-stone/30 rounded-full px-4 py-2 text-theme-cream"
                   />
                 </div>
               </div>
@@ -722,8 +729,20 @@ const Courses = () => {
         </Sheet>
       </div>
       
-      {/* Bottom Toolbar */}
-      <div className="fixed bottom-0 left-0 right-0 h-14 bg-theme-dark/80 backdrop-blur-md border-t border-theme-stone/20 z-40">
+      {/* Bottom Toolbar Toggle Button */}
+      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-40">
+        <Button 
+          onClick={toggleToolbar}
+          className="bg-theme-navy/80 backdrop-blur-md hover:bg-theme-navy text-theme-cream rounded-full shadow-lg"
+          size="sm"
+        >
+          {toolbarOpen ? <X className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+          {toolbarOpen ? "Hide Tools" : "Show Tools"}
+        </Button>
+      </div>
+      
+      {/* Collapsible Bottom Toolbar */}
+      <div className={`fixed bottom-0 left-0 right-0 h-14 bg-theme-dark/90 backdrop-blur-md border-t border-theme-stone/20 z-30 transition-all duration-300 ${toolbarOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-full pointer-events-none'}`}>
         <div className="container mx-auto h-full flex items-center justify-between px-4">
           <div className="flex items-center space-x-4">
             {bottomTools.map((tool) => (
@@ -741,7 +760,7 @@ const Courses = () => {
               <button
                 key={tool.id}
                 onClick={() => toggleTool(tool.id)}
-                className={`p-2 rounded-md ${currentTool === tool.id ? 'bg-theme-navy text-theme-cream' : 'text-theme-stone hover:bg-theme-stone/10'}`}
+                className={`p-2 rounded-md ${currentTool === tool.id ? 'bg-theme-navy/80 backdrop-blur-md text-theme-cream' : 'text-theme-stone hover:bg-theme-stone/10'}`}
               >
                 {tool.icon}
               </button>
@@ -754,3 +773,4 @@ const Courses = () => {
 };
 
 export default Courses;
+
