@@ -12,13 +12,29 @@ import {
   Code, 
   Clock, 
   ArrowRight, 
+  ArrowLeft,
   ChevronDown, 
   Volume2,
   FileText,
   Settings,
   Share2,
-  User
+  User,
+  BellRing,
+  CheckCircle,
+  X
 } from 'lucide-react';
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
+import { cn } from "@/lib/utils";
 
 // Import profile images
 const profileImages = {
@@ -41,6 +57,7 @@ interface Message {
   timestamp: Date;
   senderName?: string;
   profileImage?: string;
+  hasQuestion?: boolean;
 }
 
 interface Tool {
@@ -57,13 +74,22 @@ interface Achievement {
   maxValue: number;
 }
 
+interface Question {
+  id: string;
+  title: string;
+  description: string;
+  options?: string[];
+  type: 'multiple-choice' | 'text' | 'code' | 'experiment';
+  isOpen: boolean;
+}
+
 const Courses = () => {
   const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [activeEra, setActiveEra] = useState('renaissance');
   const [currentTool, setCurrentTool] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
+  const [questionOpen, setQuestionOpen] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
   
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -96,6 +122,15 @@ const Courses = () => {
       senderName: 'Flying Code',
       profileImage: profileImages.ai
     },
+    {
+      id: '5',
+      sender: 'scientist',
+      content: 'Now that we understand the basic principles, let me test your knowledge with a question about lift generation.',
+      timestamp: new Date(),
+      senderName: 'Leonardo da Vinci',
+      profileImage: profileImages.leonardo,
+      hasQuestion: true
+    },
   ]);
 
   const tasks: Task[] = [
@@ -124,6 +159,24 @@ const Courses = () => {
     { id: 'save', name: 'Save', icon: <FileText className="h-5 w-5" /> },
     { id: 'settings', name: 'Settings', icon: <Settings className="h-5 w-5" /> },
     { id: 'share', name: 'Share', icon: <Share2 className="h-5 w-5" /> },
+  ];
+
+  const questions: Question[] = [
+    {
+      id: 'q1',
+      title: 'Understanding Flight Principles',
+      description: 'Which of the following is NOT one of the four primary forces affecting flight?',
+      options: ['Lift', 'Weight', 'Momentum', 'Drag'],
+      type: 'multiple-choice',
+      isOpen: false
+    },
+    {
+      id: 'q2',
+      title: 'Wing Design Challenge',
+      description: 'Design a simple wing profile that maximizes lift while minimizing drag. Use the interactive tool to test your design.',
+      type: 'experiment',
+      isOpen: false
+    }
   ];
 
   const handleSendMessage = () => {
@@ -162,6 +215,30 @@ const Courses = () => {
     }
   };
 
+  const openQuestion = (question: Question) => {
+    setCurrentQuestion({...question, isOpen: true});
+    setQuestionOpen(true);
+  };
+
+  const closeQuestion = () => {
+    setQuestionOpen(false);
+    setCurrentQuestion(null);
+  };
+
+  const handleQuestionSubmit = () => {
+    closeQuestion();
+    setTimeout(() => {
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        sender: 'scientist',
+        content: 'Well done! That\'s correct. Momentum is not one of the four primary forces of flight. The four forces are lift, weight, thrust, and drag.',
+        timestamp: new Date(),
+        senderName: 'Leonardo da Vinci',
+        profileImage: profileImages.leonardo
+      }]);
+    }, 1000);
+  };
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false);
@@ -178,6 +255,20 @@ const Courses = () => {
     }
   }, [messages]);
 
+  // Check for messages with questions and open the question panel if needed
+  useEffect(() => {
+    const messagesWithQuestions = messages.filter(msg => msg.hasQuestion);
+    if (messagesWithQuestions.length > 0 && !questionOpen) {
+      // Show notification that a new question is available
+      const latestQuestion = questions[0]; // In a real app, this would be linked to the message
+      if (latestQuestion && !latestQuestion.isOpen) {
+        setTimeout(() => {
+          openQuestion(latestQuestion);
+        }, 2000);
+      }
+    }
+  }, [messages, questionOpen]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col bg-theme-dark">
@@ -193,401 +284,371 @@ const Courses = () => {
 
   return (
     <div className="course-content-page min-h-screen flex flex-col bg-theme-dark">
-      {/* Header */}
+      {/* Header - Fixed at top */}
       <Header />
       
-      <div className="flex-grow flex flex-col md:flex-row">
-        {/* Dynamic Banner Area */}
-        <section className="dynamic-banner w-full h-[30vh] relative overflow-hidden">
-          <div 
-            className="absolute inset-0 bg-cover bg-center parallax-bg"
-            style={{ 
-              backgroundImage: `url('https://images.unsplash.com/photo-1576502200916-3808e07386a5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80')`,
-              transform: 'translateY(0px)'
-            }}
-          ></div>
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-theme-dark"></div>
-          
-          <div className="absolute bottom-4 left-4 glass-effect px-3 py-2 rounded-md">
-            <span className="text-xs font-medium text-theme-cream">Renaissance Era • Chapter 2</span>
-          </div>
-          
-          <div className="absolute top-4 right-4 flex space-x-2">
-            <div className="glass-effect px-4 py-2 rounded-full flex items-center">
-              <div className="w-4 h-4 bg-theme-glow rounded-full mr-2"></div>
-              <span className="text-xs font-medium text-theme-cream">Progress: 35%</span>
+      {/* Main Content - Three Column Layout */}
+      <div className="flex-grow flex flex-col md:flex-row pt-16">
+        {/* Left Column - Course Information */}
+        <section className="course-sidebar w-full md:w-1/5 bg-theme-dark/90 border-r border-theme-stone/20 overflow-y-auto">
+          <div className="h-full flex flex-col p-4 space-y-6">
+            {/* Course Title and Progress */}
+            <div className="space-y-3">
+              <h2 className="text-xl font-semibold text-theme-cream">Flight Principles</h2>
+              <div className="flex items-center justify-between text-sm text-theme-stone">
+                <span>Renaissance Era • Chapter 2</span>
+                <Badge className="bg-theme-navy text-theme-cream">35%</Badge>
+              </div>
+              <Progress value={35} className="h-1.5 bg-theme-stone/30" />
+            </div>
+            
+            <div className="space-y-2">
+              <h3 className="text-md font-medium text-theme-cream flex items-center">
+                <BookOpen className="h-4 w-4 mr-2" />
+                Current Tasks
+              </h3>
+              <div className="space-y-2 pl-2">
+                {tasks.map((task) => (
+                  <div key={task.id} className="flex items-center space-x-2 text-sm">
+                    <Checkbox checked={task.completed} />
+                    <span className={task.completed ? 'text-theme-stone line-through' : 'text-theme-cream'}>
+                      {task.title}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <h3 className="text-md font-medium text-theme-cream flex items-center">
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Achievements
+              </h3>
+              <div className="space-y-3">
+                {achievements.map((achievement) => (
+                  <div key={achievement.id} className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-theme-cream">{achievement.title}</span>
+                      <span className="text-theme-stone">{achievement.progress}/{achievement.maxValue}</span>
+                    </div>
+                    <div className="h-1.5 bg-theme-stone/20 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-theme-glow" 
+                        style={{ width: `${(achievement.progress / achievement.maxValue) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <h3 className="text-md font-medium text-theme-cream flex items-center">
+                <Clock className="h-4 w-4 mr-2" />
+                Learning Path
+              </h3>
+              
+              <div className="space-y-2">
+                <Collapsible>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-2 rounded bg-theme-dark/50 border border-theme-stone/10">
+                    <span className="text-theme-glow text-sm font-medium">Renaissance Module</span>
+                    <ChevronDown className="h-4 w-4 text-theme-stone" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-2 pl-2 space-y-1">
+                    <div className="flex items-center space-x-2 p-1 rounded text-theme-glow text-sm">
+                      <div className="w-1.5 h-1.5 rounded-full bg-theme-glow"></div>
+                      <span>Leonardo's Workshop</span>
+                    </div>
+                    <div className="flex items-center space-x-2 p-1 rounded text-theme-cream text-sm">
+                      <div className="w-1.5 h-1.5 rounded-full bg-theme-stone"></div>
+                      <span>Mathematical Principles</span>
+                    </div>
+                    <div className="flex items-center space-x-2 p-1 rounded text-theme-stone text-sm opacity-70">
+                      <div className="w-1.5 h-1.5 rounded-full bg-theme-stone/50"></div>
+                      <span>Final Project</span>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+                
+                <div className="p-2 rounded bg-theme-dark/50 border border-theme-stone/10 text-theme-stone text-sm font-medium">
+                  Industrial Revolution Module
+                </div>
+                
+                <div className="p-2 rounded bg-theme-dark/50 border border-theme-stone/10 text-theme-stone text-sm font-medium">
+                  Digital Age Module
+                </div>
+              </div>
             </div>
           </div>
         </section>
         
-        {/* Main Content Area */}
-        <main className="content-area flex-grow flex flex-col md:flex-row">
-          {/* Left Side - Dialogue Section */}
-          <section className="dialogue-section w-full md:w-3/5 h-[70vh] md:h-auto border-r border-theme-stone/20">
-            <div className="h-full flex flex-col">
-              <div className="glass-effect px-4 py-2 border-b border-theme-stone/20">
-                <h2 className="text-xl font-semibold text-theme-cream">Learning with Leonardo da Vinci</h2>
-                <div className="flex items-center space-x-2 text-theme-stone text-sm">
-                  <Clock className="h-4 w-4" />
-                  <span>Estimated time: 45 minutes</span>
-                </div>
-              </div>
-              
+        {/* Middle Column - Chat Interface */}
+        <section className="dialogue-section w-full md:w-3/5 h-[calc(100vh-4rem)]">
+          <div className="h-full flex flex-col">
+            {/* Dynamic Banner Area */}
+            <div className="dynamic-banner w-full h-[25vh] relative overflow-hidden">
               <div 
-                id="message-container"
-                className="flex-grow overflow-y-auto p-4 space-y-4"
-                style={{ maxHeight: 'calc(70vh - 60px)' }}
-              >
-                {messages.map((message) => (
+                className="absolute inset-0 bg-cover bg-center parallax-bg"
+                style={{ 
+                  backgroundImage: `url('https://images.unsplash.com/photo-1576502200916-3808e07386a5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80')`,
+                  transform: 'translateY(0px)'
+                }}
+              ></div>
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-theme-dark"></div>
+              
+              <div className="absolute bottom-4 left-4 glass-effect px-3 py-2 rounded-md">
+                <span className="text-xs font-medium text-theme-cream">Renaissance Era • Chapter 2</span>
+              </div>
+            </div>
+            
+            <div className="glass-effect px-4 py-2 border-b border-theme-stone/20">
+              <h2 className="text-xl font-semibold text-theme-cream">Learning with Leonardo da Vinci</h2>
+              <div className="flex items-center space-x-2 text-theme-stone text-sm">
+                <Clock className="h-4 w-4" />
+                <span>Estimated time: 45 minutes</span>
+              </div>
+            </div>
+            
+            <div 
+              id="message-container"
+              className="flex-grow overflow-y-auto p-4 space-y-4"
+              style={{ maxHeight: 'calc(75vh - 60px)' }}
+            >
+              {messages.map((message) => (
+                <div 
+                  key={message.id} 
+                  className={`message flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'} items-end space-x-2`}
+                >
+                  {message.sender !== 'user' && (
+                    <div className="flex-shrink-0">
+                      <div className="w-10 h-10 rounded-full overflow-hidden">
+                        <img 
+                          src={message.profileImage} 
+                          alt={message.senderName || "Profile"} 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
                   <div 
-                    key={message.id} 
-                    className={`message flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'} items-end space-x-2`}
+                    className={`max-w-[80%] rounded-2xl px-4 py-2 ${
+                      message.sender === 'user' 
+                        ? 'bg-theme-navy text-theme-cream rounded-br-none' 
+                        : message.sender === 'scientist'
+                          ? 'bg-theme-earth/80 text-theme-cream rounded-bl-none' 
+                          : 'bg-theme-teal/30 text-theme-cream'
+                    }`}
                   >
                     {message.sender !== 'user' && (
-                      <div className="flex-shrink-0">
-                        <div className="w-10 h-10 rounded-full overflow-hidden">
-                          <img 
-                            src={message.profileImage} 
-                            alt={message.senderName || "Profile"} 
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
+                      <div className="font-medium text-xs mb-1">
+                        {message.senderName}
                       </div>
                     )}
+                    <p>{message.content}</p>
                     
-                    <div 
-                      className={`max-w-[80%] rounded-2xl px-4 py-2 ${
-                        message.sender === 'user' 
-                          ? 'bg-theme-navy text-theme-cream rounded-br-none' 
-                          : message.sender === 'scientist'
-                            ? 'bg-theme-earth/80 text-theme-cream rounded-bl-none' 
-                            : 'bg-theme-teal/30 text-theme-cream'
-                      }`}
-                    >
-                      {message.sender !== 'user' && (
-                        <div className="font-medium text-xs mb-1">
-                          {message.senderName}
-                        </div>
-                      )}
-                      <p>{message.content}</p>
-                    </div>
-                    
-                    {message.sender === 'user' && (
-                      <div className="flex-shrink-0">
-                        <div className="w-10 h-10 rounded-full overflow-hidden">
-                          <User className="w-full h-full p-2 bg-theme-navy text-theme-cream" />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-              
-              <div className="p-3 border-t border-theme-stone/20">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Type your message..."
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                    className="w-full bg-theme-dark/60 border border-theme-stone/30 rounded-full px-4 py-2 pr-24 text-theme-cream placeholder-theme-stone focus:outline-none focus:ring-1 focus:ring-theme-glow"
-                  />
-                  
-                  <div className="absolute right-2 top-1 flex items-center space-x-1">
-                    <button 
-                      onClick={toggleRecording}
-                      className={`p-2 rounded-full ${isRecording ? 'bg-theme-coral text-white' : 'bg-theme-stone/20 text-theme-stone hover:bg-theme-stone/30'}`}
-                    >
-                      <Mic className="h-4 w-4" />
-                    </button>
-                    
-                    <button 
-                      onClick={handleSendMessage}
-                      className="bg-theme-navy hover:bg-theme-navy/90 text-theme-cream p-2 rounded-full"
-                    >
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-          
-          {/* Right Side - Interaction Section */}
-          <section className="interaction-section w-full md:w-2/5 h-[70vh] md:h-auto">
-            <div className="h-full flex flex-col">
-              <div className="glass-effect flex items-center justify-between px-4 py-2 border-b border-theme-stone/20">
-                <h3 className="text-lg font-semibold text-theme-cream">Interactive Tools</h3>
-                <div className="flex space-x-1">
-                  {tools.map((tool) => (
-                    <button
-                      key={tool.id}
-                      onClick={() => toggleTool(tool.id)}
-                      className={`p-2 rounded-md ${currentTool === tool.id ? 'bg-theme-navy text-theme-cream' : 'text-theme-stone hover:bg-theme-stone/10'}`}
-                    >
-                      {tool.icon}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="flex-grow p-4 overflow-y-auto bg-theme-dark/30">
-                {currentTool === 'experiment' && (
-                  <div className="bg-theme-dark/50 rounded-lg p-4 border border-theme-stone/20">
-                    <h4 className="text-lg font-medium text-theme-cream mb-3">Wing Design Experiment</h4>
-                    <p className="text-theme-stone mb-4">Test different wing shapes to see how they affect lift and drag.</p>
-                    
-                    <div className="h-48 bg-theme-dark/70 rounded flex items-center justify-center mb-4 text-theme-stone border border-theme-stone/10">
-                      Interactive simulation would appear here
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <div>
-                        <label className="text-theme-stone text-sm">Wing Curvature</label>
-                        <input type="range" className="w-full" />
-                      </div>
-                      
-                      <div>
-                        <label className="text-theme-stone text-sm">Air Speed</label>
-                        <input type="range" className="w-full" />
-                      </div>
-                      
-                      <Button className="w-full bg-theme-navy hover:bg-theme-navy/90 text-theme-cream">
-                        Run Simulation
+                    {message.hasQuestion && (
+                      <Button 
+                        onClick={() => openQuestion(questions[0])} 
+                        size="sm" 
+                        className="mt-2 bg-theme-navy hover:bg-theme-navy/90"
+                      >
+                        Answer Question
                       </Button>
-                    </div>
+                    )}
                   </div>
-                )}
-                
-                {currentTool === 'notes' && (
-                  <div className="bg-theme-dark/50 rounded-lg p-4 border border-theme-stone/20">
-                    <h4 className="text-lg font-medium text-theme-cream mb-3">Your Notes</h4>
-                    
-                    <div className="space-y-2">
-                      <div className="p-3 bg-theme-dark/70 rounded border border-theme-stone/10">
-                        <div className="text-theme-glow font-medium">Four Forces of Flight</div>
-                        <p className="text-theme-stone text-sm">Lift, weight, thrust, and drag must be balanced for flight.</p>
-                      </div>
-                      
-                      <div className="p-3 bg-theme-dark/70 rounded border border-theme-stone/10">
-                        <div className="text-theme-glow font-medium">Leonardo's Observations</div>
-                        <p className="text-theme-stone text-sm">Birds adjust wing shape for different flight conditions.</p>
-                      </div>
-                      
-                      <div className="p-3 bg-theme-dark/70 rounded border border-theme-stone/10">
-                        <div className="text-theme-glow font-medium">Mathematical Principle</div>
-                        <p className="text-theme-stone text-sm">Lift is proportional to the square of velocity.</p>
-                      </div>
-                    </div>
-                    
-                    <div className="mt-4">
-                      <input 
-                        type="text"
-                        placeholder="Add a new note..."
-                        className="w-full bg-theme-dark/60 border border-theme-stone/30 rounded px-3 py-2 text-theme-cream"
-                      />
-                    </div>
-                  </div>
-                )}
-                
-                {currentTool === 'calculator' && (
-                  <div className="bg-theme-dark/50 rounded-lg p-4 border border-theme-stone/20">
-                    <h4 className="text-lg font-medium text-theme-cream mb-3">Scientific Calculator</h4>
-                    
-                    <div className="p-3 bg-theme-dark/70 rounded border border-theme-stone/10 mb-4">
-                      <input 
-                        type="text"
-                        readOnly
-                        value="L = (1/2) × ρ × v² × S × CL"
-                        className="w-full bg-transparent text-theme-cream py-1"
-                      />
-                    </div>
-                    
-                    <div className="grid grid-cols-4 gap-1">
-                      {['7', '8', '9', '÷', '4', '5', '6', '×', '1', '2', '3', '-', '0', '.', '=', '+'].map((key) => (
-                        <button
-                          key={key}
-                          className="p-3 bg-theme-dark/70 text-theme-cream rounded border border-theme-stone/10 hover:bg-theme-navy/50"
-                        >
-                          {key}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                {!currentTool && (
-                  <div className="h-full flex items-center justify-center text-theme-stone">
-                    <div className="text-center">
-                      <BookOpen className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                      <p>Select a tool to begin</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              {/* AI Assistant Floating Button */}
-              <div className="absolute bottom-20 right-6 md:bottom-6 md:right-6">
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button className="h-14 w-14 rounded-full bg-theme-teal hover:bg-theme-teal/90 shadow-lg">
-                      <Volume2 className="h-6 w-6 text-theme-dark" />
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent className="bg-theme-dark border-theme-stone/20">
-                    <div className="py-6">
-                      <h3 className="text-xl font-semibold text-theme-cream mb-4">Flying Code - AI Assistant</h3>
-                      <div className="space-y-4">
-                        <div className="bg-theme-teal/20 rounded-lg p-3 border border-theme-teal/30">
-                          <p className="text-theme-cream">How can I help with your learning today?</p>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Button variant="outline" className="w-full justify-start text-left border-theme-stone/20 text-theme-stone">
-                            <BookOpen className="h-4 w-4 mr-2" />
-                            Explain the concept of lift
-                          </Button>
-                          <Button variant="outline" className="w-full justify-start text-left border-theme-stone/20 text-theme-stone">
-                            <Code className="h-4 w-4 mr-2" />
-                            Help with the wing simulation
-                          </Button>
-                          <Button variant="outline" className="w-full justify-start text-left border-theme-stone/20 text-theme-stone">
-                            <Clock className="h-4 w-4 mr-2" />
-                            Show my learning progress
-                          </Button>
-                        </div>
-                        
-                        <div className="pt-4">
-                          <input
-                            type="text"
-                            placeholder="Ask Flying Code anything..."
-                            className="w-full bg-theme-dark/60 border border-theme-stone/30 rounded-full px-4 py-2 text-theme-cream"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </SheetContent>
-                </Sheet>
-              </div>
-            </div>
-          </section>
-          
-          {/* Collapsible Sidebar */}
-          <aside className={`sidebar ${sidebarOpen ? 'block' : 'hidden'} fixed right-0 top-16 bottom-0 w-64 bg-theme-dark/30 backdrop-blur-md border-l border-theme-stone/20 z-10 transition-all duration-300 ease-in-out`}>
-            <div className="h-full flex flex-col">
-              <div className="p-4 border-b border-theme-stone/20">
-                <button
-                  onClick={() => setSidebarOpen(false)}
-                  className="absolute top-2 left-2 p-1 rounded-full hover:bg-theme-stone/10 text-theme-stone"
-                >
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-                <h3 className="text-lg font-semibold text-theme-cream text-center">Course Progress</h3>
-              </div>
-              
-              <div className="flex-grow overflow-y-auto p-4 space-y-6">
-                <div>
-                  <h4 className="text-theme-cream font-medium mb-2">Current Tasks</h4>
-                  <div className="space-y-2">
-                    {tasks.map((task) => (
-                      <div key={task.id} className="flex items-center space-x-2">
-                        <Checkbox checked={task.completed} />
-                        <span className={task.completed ? 'text-theme-stone line-through' : 'text-theme-cream'}>
-                          {task.title}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="text-theme-cream font-medium mb-2">Achievements</h4>
-                  <div className="space-y-3">
-                    {achievements.map((achievement) => (
-                      <div key={achievement.id}>
-                        <div className="flex justify-between text-xs mb-1">
-                          <span className="text-theme-cream">{achievement.title}</span>
-                          <span className="text-theme-stone">{achievement.progress}/{achievement.maxValue}</span>
-                        </div>
-                        <div className="h-1.5 bg-theme-stone/20 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-theme-glow" 
-                            style={{ width: `${(achievement.progress / achievement.maxValue) * 100}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="text-theme-cream font-medium mb-2">Learning Path</h4>
                   
-                  <div className="space-y-2">
-                    <Collapsible>
-                      <CollapsibleTrigger className="flex items-center justify-between w-full p-2 rounded bg-theme-dark/50 border border-theme-stone/10">
-                        <span className="text-theme-cream text-sm font-medium">Renaissance Module</span>
-                        <ChevronDown className="h-4 w-4 text-theme-stone" />
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="pt-2 pl-2 space-y-1">
-                        <div className="flex items-center space-x-2 p-1 rounded text-theme-glow text-sm">
-                          <div className="w-1.5 h-1.5 rounded-full bg-theme-glow"></div>
-                          <span>Leonardo's Workshop</span>
-                        </div>
-                        <div className="flex items-center space-x-2 p-1 rounded text-theme-cream text-sm">
-                          <div className="w-1.5 h-1.5 rounded-full bg-theme-stone"></div>
-                          <span>Mathematical Principles</span>
-                        </div>
-                        <div className="flex items-center space-x-2 p-1 rounded text-theme-stone text-sm opacity-70">
-                          <div className="w-1.5 h-1.5 rounded-full bg-theme-stone/50"></div>
-                          <span>Final Project</span>
-                        </div>
-                      </CollapsibleContent>
-                    </Collapsible>
-                    
-                    <div className="p-2 rounded bg-theme-dark/50 border border-theme-stone/10 text-theme-stone text-sm font-medium">
-                      Industrial Revolution Module
+                  {message.sender === 'user' && (
+                    <div className="flex-shrink-0">
+                      <div className="w-10 h-10 rounded-full overflow-hidden">
+                        <User className="w-full h-full p-2 bg-theme-navy text-theme-cream" />
+                      </div>
                     </div>
-                    
-                    <div className="p-2 rounded bg-theme-dark/50 border border-theme-stone/10 text-theme-stone text-sm font-medium">
-                      Digital Age Module
-                    </div>
-                  </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            
+            <div className="p-3 border-t border-theme-stone/20">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Type your message..."
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                  className="w-full bg-theme-dark/60 border border-theme-stone/30 rounded-full px-4 py-2 pr-24 text-theme-cream placeholder-theme-stone focus:outline-none focus:ring-1 focus:ring-theme-glow"
+                />
+                
+                <div className="absolute right-2 top-1 flex items-center space-x-1">
+                  <button 
+                    onClick={toggleRecording}
+                    className={`p-2 rounded-full ${isRecording ? 'bg-theme-coral text-white' : 'bg-theme-stone/20 text-theme-stone hover:bg-theme-stone/30'}`}
+                  >
+                    <Mic className="h-4 w-4" />
+                  </button>
+                  
+                  <button 
+                    onClick={handleSendMessage}
+                    className="bg-theme-navy hover:bg-theme-navy/90 text-theme-cream p-2 rounded-full"
+                  >
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
-            </div>
-          </aside>
-          
-          {/* Bottom Toolbar */}
-          <div className="fixed bottom-0 left-0 right-0 h-14 bg-theme-dark/80 backdrop-blur-md border-t border-theme-stone/20">
-            <div className="container mx-auto h-full flex items-center justify-between px-4">
-              <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className={`p-2 rounded ${sidebarOpen ? 'bg-theme-navy text-theme-cream' : 'text-theme-stone hover:bg-theme-stone/10'}`}
-              >
-                <BookOpen className="h-5 w-5" />
-              </button>
-              
-              <div className="flex items-center space-x-4">
-                {bottomTools.map((tool) => (
-                  <button
-                    key={tool.id}
-                    className="p-2 rounded text-theme-stone hover:bg-theme-stone/10"
-                  >
-                    {tool.icon}
-                  </button>
-                ))}
-              </div>
-              
-              <div className="w-5"></div> {/* Empty space to balance layout */}
             </div>
           </div>
-        </main>
+        </section>
+        
+        {/* Right Column - Interactive Questions */}
+        <section className={`question-panel w-full md:w-1/5 bg-theme-dark/90 border-l border-theme-stone/20 transition-all duration-300 ${questionOpen ? 'block' : 'hidden md:block'}`}>
+          {questionOpen && currentQuestion ? (
+            <div className="h-full flex flex-col">
+              <div className="flex items-center justify-between bg-theme-navy p-3 border-b border-theme-stone/20">
+                <h3 className="text-lg font-semibold text-theme-cream">{currentQuestion.title}</h3>
+                <Button variant="ghost" size="icon" onClick={closeQuestion}>
+                  <X className="h-5 w-5 text-theme-cream" />
+                </Button>
+              </div>
+              
+              <div className="flex-grow p-4 overflow-y-auto space-y-6">
+                <div className="space-y-4">
+                  <p className="text-theme-cream">{currentQuestion.description}</p>
+                  
+                  {currentQuestion.type === 'multiple-choice' && currentQuestion.options && (
+                    <div className="space-y-3 pt-2">
+                      {currentQuestion.options.map((option, index) => (
+                        <div key={index} className="flex items-center space-x-2 p-2 rounded-md hover:bg-theme-stone/10 border border-theme-stone/20">
+                          <input 
+                            type="radio" 
+                            name="answer" 
+                            id={`opt-${index}`} 
+                            className="w-4 h-4 text-theme-navy" 
+                          />
+                          <label htmlFor={`opt-${index}`} className="text-theme-cream cursor-pointer flex-grow">
+                            {option}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {currentQuestion.type === 'experiment' && (
+                    <div className="bg-theme-dark/50 rounded-lg p-4 border border-theme-stone/20">
+                      <h4 className="text-lg font-medium text-theme-cream mb-3">Wing Design Experiment</h4>
+                      
+                      <div className="h-48 bg-theme-dark/70 rounded flex items-center justify-center mb-4 text-theme-stone border border-theme-stone/10">
+                        Interactive simulation would appear here
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-theme-stone text-sm">Wing Curvature</label>
+                          <input type="range" className="w-full" />
+                        </div>
+                        
+                        <div>
+                          <label className="text-theme-stone text-sm">Air Speed</label>
+                          <input type="range" className="w-full" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="pt-4">
+                  <Button 
+                    onClick={handleQuestionSubmit} 
+                    className="w-full bg-theme-navy hover:bg-theme-navy/90 text-theme-cream"
+                  >
+                    Submit Answer
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="h-full flex flex-col items-center justify-center text-center p-4">
+              <BellRing className="h-12 w-12 text-theme-stone/50 mb-4" />
+              <h3 className="text-lg font-medium text-theme-cream mb-2">No Active Questions</h3>
+              <p className="text-theme-stone text-sm">
+                Interactive questions will appear here when Leonardo asks you something during the conversation.
+              </p>
+            </div>
+          )}
+        </section>
       </div>
       
-      {/* Footer hidden when in course view */}
-      {/* <Footer /> */}
+      {/* AI Assistant Floating Button */}
+      <div className="fixed bottom-20 right-6 z-50">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button className="h-14 w-14 rounded-full bg-theme-teal hover:bg-theme-teal/90 shadow-lg">
+              <Volume2 className="h-6 w-6 text-theme-dark" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent className="bg-theme-dark border-theme-stone/20">
+            <div className="py-6">
+              <h3 className="text-xl font-semibold text-theme-cream mb-4">Flying Code - AI Assistant</h3>
+              <div className="space-y-4">
+                <div className="bg-theme-teal/20 rounded-lg p-3 border border-theme-teal/30">
+                  <p className="text-theme-cream">How can I help with your learning today?</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Button variant="outline" className="w-full justify-start text-left border-theme-stone/20 text-theme-stone">
+                    <BookOpen className="h-4 w-4 mr-2" />
+                    Explain the concept of lift
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start text-left border-theme-stone/20 text-theme-stone">
+                    <Code className="h-4 w-4 mr-2" />
+                    Help with the wing simulation
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start text-left border-theme-stone/20 text-theme-stone">
+                    <Clock className="h-4 w-4 mr-2" />
+                    Show my learning progress
+                  </Button>
+                </div>
+                
+                <div className="pt-4">
+                  <input
+                    type="text"
+                    placeholder="Ask Flying Code anything..."
+                    className="w-full bg-theme-dark/60 border border-theme-stone/30 rounded-full px-4 py-2 text-theme-cream"
+                  />
+                </div>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+      </div>
+      
+      {/* Bottom Toolbar */}
+      <div className="fixed bottom-0 left-0 right-0 h-14 bg-theme-dark/80 backdrop-blur-md border-t border-theme-stone/20 z-40">
+        <div className="container mx-auto h-full flex items-center justify-between px-4">
+          <div className="flex items-center space-x-4">
+            {bottomTools.map((tool) => (
+              <button
+                key={tool.id}
+                className="p-2 rounded text-theme-stone hover:bg-theme-stone/10"
+              >
+                {tool.icon}
+              </button>
+            ))}
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            {tools.map((tool) => (
+              <button
+                key={tool.id}
+                onClick={() => toggleTool(tool.id)}
+                className={`p-2 rounded-md ${currentTool === tool.id ? 'bg-theme-navy text-theme-cream' : 'text-theme-stone hover:bg-theme-stone/10'}`}
+              >
+                {tool.icon}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
