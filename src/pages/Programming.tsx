@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { Code, FileCode, Braces, Terminal, BookOpen, SendHorizonal } from 'lucide-react';
+import { Code, FileCode, Braces, Terminal, BookOpen, SendHorizonal, Cpu } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
 interface ProgrammingInfoProps {
@@ -124,6 +124,14 @@ const Programming = () => {
               <p className="text-xl text-theme-stone mb-10">
                 Explore our programming resources and tools. Submit your code for review or ask for programming help with our expert tutors.
               </p>
+              <div className="flex justify-center space-x-6">
+                <Button className="hero-button group" asChild>
+                  <Link to="/interactive-coding">
+                    Interactive Coding Environment
+                    <Cpu className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+              </div>
               <div className="relative mx-auto w-24 h-1 bg-theme-glow my-8 rounded-full"></div>
             </div>
           </div>
