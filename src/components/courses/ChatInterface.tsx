@@ -97,7 +97,7 @@ const ChatInterface = ({
       <div className={`transition-all duration-300 ease-in-out ${isHeaderVisible ? 'h-[28vh]' : 'h-[10vh]'}`}>
         <div className="relative w-full h-full">
           <div className="absolute inset-0 bg-gradient-to-b from-theme-navy/20 to-theme-dark/95 z-10">
-            <img src={aiGeneratedImage} alt="AI Generated Scene" className="w-full h-full object-cover opacity-75" />
+            <img src={aiGeneratedImage} alt="AI Generated Scene" className="w-full h-full object-cover opacity-40" />
           </div>
           
           <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-theme-dark to-transparent z-20">
