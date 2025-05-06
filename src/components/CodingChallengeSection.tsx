@@ -146,8 +146,8 @@ const CodingChallengeSection = () => {
                         <div className="flex">
                           <Lightbulb className="h-5 w-5 text-yellow-500 mr-2 flex-shrink-0" />
                           <div>
-                            <p className="font-semibold">Hint:</p>
-                            <p>
+                            <p className="font-semibold text-gray-700">Hint:</p>
+                            <p className="text-gray-700">
                               For the propeller, use a loop with the <code>turtle.forward()</code> and <code>turtle.left()</code> commands 
                               to create a circular pattern.
                             </p>
