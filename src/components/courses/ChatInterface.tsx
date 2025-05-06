@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import MessageItem from './MessageItem';
 import DraggableChatInput from './DraggableChatInput';
@@ -38,6 +39,13 @@ const ChatInterface = ({ messages, setMessages, aiGeneratedImage, openQuestion, 
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const headerHeight = isHeaderVisible ? '28vh' : '10vh';
   
+  // Auto-scroll to bottom on new messages
+  useEffect(() => {
+    if (messageContainerRef.current) {
+      messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   const handleSendMessage = () => {
     if (newMessage.trim()) {
       setMessages(prev => [...prev, {
@@ -47,6 +55,13 @@ const ChatInterface = ({ messages, setMessages, aiGeneratedImage, openQuestion, 
         timestamp: new Date()
       }]);
       setNewMessage('');
+      
+      // Ensure scroll to bottom after message is added
+      setTimeout(() => {
+        if (messageContainerRef.current) {
+          messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
+        }
+      }, 100);
     }
   };
 
@@ -71,12 +86,6 @@ const ChatInterface = ({ messages, setMessages, aiGeneratedImage, openQuestion, 
   };
   
   useEffect(() => {
-    if (messageContainerRef.current) {
-      messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
-    }
-  }, [messages]);
-
-  useEffect(() => {
     const messageContainer = messageContainerRef.current;
     if (messageContainer) {
       messageContainer.addEventListener('scroll', handleScroll);
@@ -87,14 +96,14 @@ const ChatInterface = ({ messages, setMessages, aiGeneratedImage, openQuestion, 
         messageContainer.removeEventListener('scroll', handleScroll);
       }
     };
-  }, []);
+  }, [isHeaderVisible]);
 
   return (
     <div ref={chatContainerRef} className="flex-1 h-full flex flex-col relative overflow-hidden border-x border-theme-stone/10">
       {/* Header with transition */}
       <div className={`transition-all duration-300 ease-in-out ${isHeaderVisible ? 'h-[28vh]' : 'h-[10vh]'}`}>
         <div className="relative w-full h-full">
-          <div className="absolute inset-0 bg-gradient-to-b from-theme-navy/20 to-theme-dark/95">
+          <div className="absolute inset-0 bg-gradient-to-b from-theme-navy/20 to-theme-dark/95 z-10">
             <img
               src={aiGeneratedImage}
               alt="AI Generated Scene"
@@ -102,7 +111,7 @@ const ChatInterface = ({ messages, setMessages, aiGeneratedImage, openQuestion, 
             />
           </div>
           
-          <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-theme-dark to-transparent">
+          <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-theme-dark to-transparent z-20">
             <div className="flex items-center justify-between">
               <div className="space-y-2">
                 <div className="text-xs text-theme-stone bg-theme-navy/40 px-3 py-1 rounded-full backdrop-blur-sm">
@@ -114,10 +123,11 @@ const ChatInterface = ({ messages, setMessages, aiGeneratedImage, openQuestion, 
         </div>
       </div>
       
+      {/* Messages container with improved scrolling */}
       <div 
         ref={messageContainerRef}
-        className="flex-grow overflow-y-auto px-4 pt-2 pb-32 space-y-4"
-        style={{ height: `calc(100% - ${headerHeight} - 80px)` }}
+        className="flex-grow overflow-y-auto px-4 pt-2 pb-24 space-y-4"
+        style={{ height: `calc(100% - ${headerHeight})` }}
       >
         {messages.map((message) => (
           <MessageItem 
@@ -127,8 +137,11 @@ const ChatInterface = ({ messages, setMessages, aiGeneratedImage, openQuestion, 
             question={message.hasQuestion ? questions[0] : undefined}
           />
         ))}
+        {/* Add invisible padding element to prevent last message from being hidden by input */}
+        <div className="h-16"></div>
       </div>
       
+      {/* Chat input */}
       <DraggableChatInput
         newMessage={newMessage}
         setNewMessage={setNewMessage}

@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -33,7 +34,7 @@ const DraggableChatInput: React.FC<DraggableChatInputProps> = ({
   return (
     <div
       ref={inputRef}
-      className="fixed bottom-0 left-1/2 transform -translate-x-1/2 z-30 w-full max-w-3xl mb-4"
+      className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-30 w-full max-w-3xl px-4"
     >
       <div className="flex items-center gap-2 p-3 bg-theme-dark/70 backdrop-blur-md rounded-lg border border-theme-stone/20 shadow-lg">
         <Button
