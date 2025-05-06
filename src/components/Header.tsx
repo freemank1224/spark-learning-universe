@@ -50,7 +50,7 @@ const Header = () => {
           <Link to="/courses" className={`nav-link ${isActive('/courses') ? 'active' : ''}`}>Courses</Link>
           <Link to="/about" className={`nav-link ${isActive('/about') ? 'active' : ''}`}>About</Link>
           <Link to="/projects" className={`nav-link ${isActive('/projects') ? 'active' : ''}`}>Projects</Link>
-          <Link to="/contact" className={`nav-link ${isActive('/contact') ? 'active' : ''}`}>Contact</Link>
+          <Link to="/programming" className={`nav-link ${isActive('/programming') ? 'active' : ''}`}>Programming</Link>
         </nav>
         
         <div className="hidden md:flex items-center space-x-4">
@@ -100,8 +100,8 @@ const Header = () => {
             <Link to="/projects" className={`nav-link ${isActive('/projects') ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
               Projects
             </Link>
-            <Link to="/contact" className={`nav-link ${isActive('/contact') ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
-              Contact
+            <Link to="/programming" className={`nav-link ${isActive('/programming') ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+              Programming
             </Link>
             <div className="pt-4 flex items-center justify-between border-t border-theme-stone/20">
               <Button 
