@@ -14,7 +14,7 @@ const Feature = ({
         {icon}
       </div>
       <h3 className="text-xl font-semibold mb-2">{title}</h3>
-      <p className="text-apple-gray">{description}</p>
+      <p className="text-slate-500">{description}</p>
     </div>;
 };
 const FeaturesSection = () => {
@@ -22,7 +22,7 @@ const FeaturesSection = () => {
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">AI-Powered Learning Adventure</h2>
-          <p className="text-lg text-apple-gray">
+          <p className="text-lg text-slate-400">
             Discover how SparkLearn combines storytelling, coding challenges, and interactive 
             learning to create an engaging educational experience.
           </p>

@@ -1,17 +1,8 @@
-
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { 
-  Card, 
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-  CardDescription
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Play, Code, Lightbulb, PanelLeft, PanelRight } from 'lucide-react';
-
 const challengeCode = `import turtle
 import math
 
@@ -95,12 +86,9 @@ def draw_propeller():
 draw_propeller()
 
 turtle.exitonclick()`;
-
 const CodingChallengeSection = () => {
   const [isPanelCollapsed, setIsPanelCollapsed] = useState(false);
-
-  return (
-    <section className="py-16">
+  return <section className="py-16">
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto text-center mb-10">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -113,7 +101,7 @@ const CodingChallengeSection = () => {
         
         <div className="max-w-5xl mx-auto">
           <Card className="border shadow-lg">
-            <CardHeader className="border-b bg-apple-light-gray">
+            <CardHeader className="border-b bg-apple-light-gray bg-neutral-500">
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>Da Vinci's Flying Machine Challenge</CardTitle>
@@ -130,8 +118,7 @@ const CodingChallengeSection = () => {
             
             <CardContent className="p-0">
               <div className="flex h-[500px]">
-                {!isPanelCollapsed && (
-                  <div className="w-1/3 border-r p-4 bg-white overflow-y-auto">
+                {!isPanelCollapsed && <div className="w-1/3 border-r p-4 overflow-y-auto bg-slate-700">
                     <h4 className="font-bold text-lg mb-4">Instructions</h4>
                     
                     <div className="prose max-w-none text-sm">
@@ -168,8 +155,7 @@ const CodingChallengeSection = () => {
                         </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  </div>}
                 
                 <div className={`${isPanelCollapsed ? 'w-1/2' : 'w-1/3'} border-r`}>
                   <div className="h-full bg-gray-900 text-white p-4 font-mono text-sm overflow-auto">
@@ -178,7 +164,7 @@ const CodingChallengeSection = () => {
                 </div>
                 
                 <div className={`${isPanelCollapsed ? 'w-1/2' : 'w-1/3'} relative bg-white`}>
-                  <div className="h-full flex items-center justify-center">
+                  <div className="h-full flex items-center justify-center bg-zinc-700">
                     <div className="text-center">
                       <div className="w-64 h-64 bg-sky-100 rounded-full mx-auto mb-4 flex items-center justify-center">
                         <p className="text-apple-gray">Code output preview</p>
@@ -193,12 +179,8 @@ const CodingChallengeSection = () => {
               </div>
             </CardContent>
             
-            <CardFooter className="border-t p-4 bg-gray-50 flex justify-between">
-              <Button 
-                variant="outline" 
-                size="icon"
-                onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}
-              >
+            <CardFooter className="border-t p-4 flex justify-between bg-zinc-600">
+              <Button variant="outline" size="icon" onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}>
                 {isPanelCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelRight className="h-4 w-4" />}
               </Button>
               
@@ -215,8 +197,6 @@ const CodingChallengeSection = () => {
           </Card>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default CodingChallengeSection;
