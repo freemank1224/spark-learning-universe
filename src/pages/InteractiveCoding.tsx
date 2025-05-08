@@ -225,19 +225,19 @@ console.log("Hello from JavaScript!");
     <div className="min-h-screen flex flex-col">
       <Header />
       
-      <main className="flex-grow pt-16 pb-0 bg-theme-dark">
-        <div className="container mx-auto px-0 h-[calc(100vh-8rem)]">
-          <h1 className="text-2xl font-bold mb-4 px-4 text-theme-cream">Interactive Coding Environment</h1>
+      <main className="flex-grow pt-16 pb-8 bg-theme-dark">
+        <div className="container mx-auto px-0 h-auto min-h-[calc(100vh-8rem)]">
+            <h1 className="text-2xl font-bold mb-4 px-4 text-theme-cream text-center">Interactive Coding Environment</h1>
           
           <ResizablePanelGroup 
             direction="horizontal" 
-            className="h-full border rounded-lg border-theme-stone/20 bg-theme-dark/80"
+            className="h-full min-h-[1000px] border rounded-lg border-theme-stone/20 bg-theme-dark/80"
           >
             {/* Left Panel - Visualization and Tasks */}
             <ResizablePanel defaultSize={50} minSize={30}>
               <ResizablePanelGroup direction="vertical">
                 {/* Visualization Panel */}
-                <ResizablePanel defaultSize={70} minSize={40}>
+                <ResizablePanel defaultSize={60} minSize={35}>
                   <div className="h-full bg-theme-dark/60 p-4 flex flex-col">
                     <div className="flex justify-between items-center mb-2">
                       <h2 className="text-xl font-semibold text-theme-cream">Visualization</h2>
@@ -250,8 +250,8 @@ console.log("Hello from JavaScript!");
                     </div>
                     <Separator className="mb-4" />
                     <div id="visualization-container" className="flex flex-col h-full" ref={visualizationRef}>
-                      {/* Python visualization output - 去掉边框，改为简洁设计 */}
-                      <div id="python-visualization" className="w-full h-[60%] relative overflow-auto bg-theme-dark/30 rounded-md p-2 mb-5 custom-scrollbar">
+                      {/* Python visualization output - 调整背景色使其与页面更协调 */}
+                      <div id="python-visualization" className="w-full h-[60%] relative overflow-auto bg-gradient-to-br from-theme-dark/40 to-theme-navy/20 rounded-md p-2 mb-5 custom-scrollbar">
                         {/* 直接悬浮的图形操作工具栏 */}
                         <div className="absolute top-2 right-2 z-10 bg-theme-dark/80 backdrop-blur-sm border border-theme-stone/30 rounded-md shadow-lg cursor-move py-1 px-1">
                           <div className="flex items-center gap-1">
@@ -326,7 +326,7 @@ console.log("Hello from JavaScript!");
                             <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
                             <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                           </div>
-                          <span className="ml-2 text-xs text-theme-stone">Terminal</span>
+                          <span className="ml-2 text-xs text-theme-stone">控制台输出</span>
                         </div>
                         <div className="p-2 h-[calc(100%-30px)] overflow-auto custom-scrollbar">
                           <OutputViewer 
@@ -342,7 +342,7 @@ console.log("Hello from JavaScript!");
                 <ResizableHandle withHandle />
                 
                 {/* Tasks Panel */}
-                <ResizablePanel defaultSize={30}>
+                <ResizablePanel defaultSize={40} minSize={25}>
                   <div className="h-full bg-theme-dark/80 p-4 flex flex-col">
                     <h2 className="text-xl font-semibold text-theme-cream mb-2">Learning Tasks</h2>
                     <Separator className="mb-4" />
@@ -360,7 +360,7 @@ console.log("Hello from JavaScript!");
             <ResizablePanel defaultSize={50} minSize={30}>
               <ResizablePanelGroup direction="vertical">
                 {/* Code Editor Panel */}
-                <ResizablePanel defaultSize={75} minSize={50}>
+                <ResizablePanel defaultSize={65} minSize={40}>
                   <div className="h-full bg-theme-dark/50 p-4 flex flex-col">
                     <Tabs defaultValue="python" className="w-full h-full flex flex-col" onValueChange={setSelectedLanguage}>
                       <div className="flex justify-between items-center mb-2 flex-shrink-0">
@@ -403,7 +403,7 @@ console.log("Hello from JavaScript!");
                 <ResizableHandle withHandle />
                 
                 {/* AI Assistant Panel */}
-                <ResizablePanel defaultSize={25}>
+                <ResizablePanel defaultSize={45} minSize={25}>
                   <div className="h-full bg-theme-dark/70 p-4 flex flex-col">
                     <h2 className="text-xl font-semibold text-theme-cream mb-2 flex items-center">
                       <HelpCircle className="h-5 w-5 mr-2 text-theme-glow" />
