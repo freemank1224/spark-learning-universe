@@ -85,6 +85,7 @@ plt.show()
     }
 
     setIsRunning(true);
+    // 重要：先清空输出状态，让React处理DOM更新
     setTextOutput("正在执行代码，请稍候...");
     setVisualOutput("");
     
@@ -102,11 +103,6 @@ plt.show()
           title: processedResult.hasGraphics ? "图形生成成功" : "代码执行成功",
           description: "Python 代码已执行完毕",
         });
-        
-        // 调试日志，帮助排查显示问题
-        console.log("设置的文本输出:", processedResult.textOutput);
-        console.log("设置的可视化输出:", processedResult.visualOutput);
-        
       } else {
         // 如果是JavaScript代码（可以后续实现）
         toast({
@@ -213,15 +209,20 @@ console.log("Hello from JavaScript!");
                     <Separator className="mb-4" />
                     <div id="visualization-container" className="flex flex-col h-full" ref={visualizationRef}>
                       {/* Python visualization output */}
-                      <div id="python-visualization" className="w-full h-3/5 overflow-auto bg-theme-dark/30 rounded-md p-2 mb-4">
-                        <div dangerouslySetInnerHTML={{ __html: visualOutput }} />
+                      <div id="python-visualization" className="w-full h-[60%] overflow-auto bg-theme-dark/30 rounded-md p-2 mb-4">
+                        {visualOutput && (
+                          <div 
+                            className="py-2 flex justify-center items-center w-full h-full"
+                            dangerouslySetInnerHTML={{ __html: visualOutput }} 
+                          />
+                        )}
                       </div>
                       
                       {/* Canvas for JavaScript output */}
                       <canvas id="js-canvas" className="w-full h-3/5 bg-white rounded-md p-2 mb-4 hidden" width="800" height="300"></canvas>
                       
                       {/* Text output area */}
-                      <div className="w-full h-2/5 overflow-auto bg-theme-dark/70 rounded-md p-2 font-mono text-sm text-theme-cream">
+                      <div className="w-full h-[35%] overflow-auto bg-theme-dark/70 rounded-md p-2 font-mono text-sm text-theme-cream">
                         <OutputViewer 
                           output={textOutput} 
                           isRunning={isRunning} 
