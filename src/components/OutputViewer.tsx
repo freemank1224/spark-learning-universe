@@ -1,4 +1,3 @@
-
 import { useEffect, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
 
@@ -62,10 +61,14 @@ export const OutputViewer = ({ output, isRunning }: OutputViewerProps) => {
         </div>
       ) : output ? (
         <div className="h-full flex flex-col">
-          <canvas 
-            ref={canvasRef} 
-            className="w-full h-3/4 bg-theme-dark/50 border-b border-theme-stone/10"
-          ></canvas>
+          <div className="w-full h-3/4 bg-theme-dark/50 border-b border-theme-stone/10 overflow-auto">
+            {/* Python output container */}
+            <div id="python-output" className="w-full h-full p-4"></div>
+            <canvas 
+              ref={canvasRef} 
+              className="hidden"
+            ></canvas>
+          </div>
           <pre className="p-4 text-theme-cream font-mono text-sm overflow-auto h-1/4 bg-theme-dark/80">
             {output}
           </pre>
