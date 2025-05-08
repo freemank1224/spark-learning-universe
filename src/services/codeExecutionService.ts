@@ -11,6 +11,14 @@ interface ExecutionResult {
   }[];
 }
 
+// 分离后的执行结果接口
+export interface ProcessedExecutionResult {
+  textOutput: string; // HTML格式的文本输出（包含控制台输出和错误信息）
+  visualOutput: string; // HTML格式的可视化输出（包含图形）
+  hasGraphics: boolean; // 是否包含图形
+  rawOutput: ExecutionResult; // 原始结果
+}
+
 // 获取后端API的基础URL
 const getApiBaseUrl = (): string => {
   // 开发环境使用固定后端地址，生产环境可根据需要调整
@@ -20,9 +28,9 @@ const getApiBaseUrl = (): string => {
 /**
  * 发送代码到后端执行
  * @param code 要执行的代码
- * @returns 执行结果，包括输出、错误和图表
+ * @returns 处理后的执行结果，分离了文本和可视化
  */
-export const executeCode = async (code: string): Promise<ExecutionResult> => {
+export const executeCode = async (code: string): Promise<ProcessedExecutionResult> => {
   try {
     const apiUrl = `${getApiBaseUrl()}/api/execute`;
     console.log('发送代码到后端执行:', apiUrl);
@@ -41,45 +49,51 @@ export const executeCode = async (code: string): Promise<ExecutionResult> => {
 
     const result = await response.json();
     console.log('后端执行结果:', result);
-    return result;
+    // 处理并分离结果
+    return processExecutionResult(result);
   } catch (error) {
     console.error('代码执行服务错误:', error);
-    return {
+    const errorResult = {
       output: '',
       error: `服务器错误: ${error instanceof Error ? error.message : String(error)}`,
       figures: [],
     };
+    return processExecutionResult(errorResult);
   }
 };
 
 /**
- * 处理执行结果，生成HTML输出（包括图形）
+ * 处理执行结果，分离文本和可视化内容
  * @param result 执行结果
- * @returns 格式化的HTML字符串
+ * @returns 分离处理后的结果
  */
-export const formatExecutionResult = (result: ExecutionResult): string => {
-  let formattedOutput = '';
-
-  // 添加文本输出
+export const processExecutionResult = (result: ExecutionResult): ProcessedExecutionResult => {
+  // 处理文本输出
+  let textOutput = '';
   if (result.output) {
-    formattedOutput += `<div class="console-output">${escapeHtml(result.output)}</div>`;
+    textOutput += `<div class="console-output">${escapeHtml(result.output)}</div>`;
   }
-
-  // 添加错误输出
   if (result.error) {
-    formattedOutput += `<div class="error-output">${escapeHtml(result.error)}</div>`;
+    textOutput += `<div class="error-output">${escapeHtml(result.error)}</div>`;
   }
 
-  // 添加图形输出
-  if (result.figures && result.figures.length > 0) {
-    formattedOutput += '<div class="graphics-output">';
+  // 处理可视化输出
+  let visualOutput = '';
+  const hasGraphics = result.figures && result.figures.length > 0;
+  if (hasGraphics) {
+    visualOutput += '<div class="graphics-output">';
     for (const figure of result.figures) {
-      formattedOutput += `<img src="data:image/png;base64,${figure.data}" alt="Figure ${figure.filename}" style="max-width: 100%; margin: 10px 0;" />`;
+      visualOutput += `<img src="data:image/png;base64,${figure.data}" alt="Figure ${figure.filename}" style="max-width: 100%; margin: 10px 0;" />`;
     }
-    formattedOutput += '</div>';
+    visualOutput += '</div>';
   }
 
-  return formattedOutput;
+  return {
+    textOutput,
+    visualOutput,
+    hasGraphics,
+    rawOutput: result
+  };
 };
 
 /**

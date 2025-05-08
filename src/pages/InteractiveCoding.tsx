@@ -41,7 +41,9 @@ plt.ylabel("Y axis")
 plt.grid(True)
 plt.show()
 `);
-  const [output, setOutput] = useState("");
+  // 分离文本输出和可视化输出
+  const [textOutput, setTextOutput] = useState("");
+  const [visualOutput, setVisualOutput] = useState("");
   const [isRunning, setIsRunning] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState("python");
   const [question, setQuestion] = useState("");
@@ -54,6 +56,8 @@ plt.show()
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  // 引用可视化区域DOM
+  const visualizationRef = useRef<HTMLDivElement>(null);
 
   // Tasks for the current learning module
   const [tasks, setTasks] = useState([
@@ -81,41 +85,28 @@ plt.show()
     }
 
     setIsRunning(true);
-    setOutput("正在执行代码，请稍候...");
+    setTextOutput("正在执行代码，请稍候...");
+    setVisualOutput("");
     
     try {
       if (selectedLanguage === "python") {
-        // 调用后端执行Python代码
-        const result = await executeCode(code);
+        // 调用后端执行Python代码，使用服务返回的处理好的结果
+        const processedResult = await executeCode(code);
+        console.log("处理后的执行结果:", processedResult);
         
-        // 处理结果
-        let formattedOutput = '';
-        
-        // 添加标准输出
-        if (result.output) {
-          formattedOutput += `<div class="console-output">${result.output.replace(/\n/g, '<br>')}</div>`;
-        }
-        
-        // 添加错误输出
-        if (result.error) {
-          formattedOutput += `<div class="error-output">${result.error.replace(/\n/g, '<br>')}</div>`;
-        }
-        
-        // 添加图形输出
-        if (result.figures && result.figures.length > 0) {
-          formattedOutput += '<div class="graphics-output">';
-          for (const figure of result.figures) {
-            formattedOutput += `<img src="data:image/png;base64,${figure.data}" alt="Figure ${figure.filename}" style="max-width: 100%; margin: 10px 0;" />`;
-          }
-          formattedOutput += '</div>';
-        }
-        
-        setOutput(formattedOutput);
+        // 直接使用处理好的输出
+        setTextOutput(processedResult.textOutput);
+        setVisualOutput(processedResult.visualOutput);
         
         toast({
-          title: "代码执行成功",
+          title: processedResult.hasGraphics ? "图形生成成功" : "代码执行成功",
           description: "Python 代码已执行完毕",
         });
+        
+        // 调试日志，帮助排查显示问题
+        console.log("设置的文本输出:", processedResult.textOutput);
+        console.log("设置的可视化输出:", processedResult.visualOutput);
+        
       } else {
         // 如果是JavaScript代码（可以后续实现）
         toast({
@@ -125,7 +116,8 @@ plt.show()
         });
       }
     } catch (error) {
-      setOutput(`错误: ${error instanceof Error ? error.message : String(error)}`);
+      console.error("代码执行错误:", error);
+      setTextOutput(`<div class="error-output">错误: ${error instanceof Error ? error.message : String(error)}</div>`);
       toast({
         variant: "destructive",
         title: "执行失败",
@@ -219,9 +211,11 @@ console.log("Hello from JavaScript!");
                       </div>
                     </div>
                     <Separator className="mb-4" />
-                    <div id="visualization-container" className="flex flex-col h-full">
+                    <div id="visualization-container" className="flex flex-col h-full" ref={visualizationRef}>
                       {/* Python visualization output */}
-                      <div id="python-visualization" className="w-full h-3/5 overflow-auto bg-theme-dark/30 rounded-md p-2 mb-4"></div>
+                      <div id="python-visualization" className="w-full h-3/5 overflow-auto bg-theme-dark/30 rounded-md p-2 mb-4">
+                        <div dangerouslySetInnerHTML={{ __html: visualOutput }} />
+                      </div>
                       
                       {/* Canvas for JavaScript output */}
                       <canvas id="js-canvas" className="w-full h-3/5 bg-white rounded-md p-2 mb-4 hidden" width="800" height="300"></canvas>
@@ -229,7 +223,7 @@ console.log("Hello from JavaScript!");
                       {/* Text output area */}
                       <div className="w-full h-2/5 overflow-auto bg-theme-dark/70 rounded-md p-2 font-mono text-sm text-theme-cream">
                         <OutputViewer 
-                          output={output} 
+                          output={textOutput} 
                           isRunning={isRunning} 
                         />
                       </div>

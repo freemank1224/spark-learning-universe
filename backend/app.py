@@ -9,8 +9,8 @@ matplotlib.use('Agg')  # 设置matplotlib的后端为Agg，用于生成图片
 from flask_cors import CORS
 
 app = Flask(__name__)
-# 更精确的CORS配置，确保前端可以访问后端API
-CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001"]}})
+# 更精确的CORS配置，允许任何来源访问API，这对开发环境特别有用
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 # 创建临时目录用于存储图片输出
 TEMP_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'temp')
