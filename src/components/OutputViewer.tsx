@@ -55,32 +55,21 @@ export const OutputViewer = ({ output, isRunning }: OutputViewerProps) => {
   }, [sanitizedOutput]);
 
   return (
-    <div className="w-full h-full flex flex-col">
-      <div className="flex items-center bg-theme-navy/50 px-3 py-1.5 text-sm rounded-t-md">
-        <div className="flex space-x-1.5">
-          <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-          <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-          <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+    <div 
+      ref={outputContainerRef}
+      className="h-full overflow-auto font-mono text-sm text-theme-cream whitespace-pre-wrap"
+    >
+      {isRunning ? (
+        <div className="text-theme-stone italic">
+          正在执行代码... <span className="inline-block ml-1 animate-pulse">|</span>
         </div>
-        <span className="ml-2 text-xs text-theme-stone">控制台输出</span>
-      </div>
-      
-      <div 
-        ref={outputContainerRef}
-        className="flex-grow p-3 overflow-auto font-mono text-sm text-theme-cream bg-theme-dark/70 whitespace-pre-wrap"
-      >
-        {isRunning ? (
-          <div className="text-theme-stone italic">
-            正在执行代码... <span className="inline-block ml-1 animate-pulse">|</span>
-          </div>
-        ) : sanitizedOutput ? (
-          <div dangerouslySetInnerHTML={{ __html: sanitizedOutput }} />
-        ) : (
-          <span className="text-theme-stone italic">
-            运行代码以查看输出...
-          </span>
-        )}
-      </div>
+      ) : sanitizedOutput ? (
+        <div dangerouslySetInnerHTML={{ __html: sanitizedOutput }} />
+      ) : (
+        <span className="text-theme-stone italic">
+          运行代码以查看输出...
+        </span>
+      )}
     </div>
   );
 };

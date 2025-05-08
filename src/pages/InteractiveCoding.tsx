@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Play, HelpCircle, Send, Circle } from 'lucide-react';
+import { Play, HelpCircle, Send, Circle, ZoomIn, ZoomOut, Move, RotateCw, Download, Maximize, X } from 'lucide-react';
 import { CodeEditor } from '@/components/CodeEditor';
 import { OutputViewer } from '@/components/OutputViewer';
 import { TaskList } from '@/components/TaskList';
@@ -72,6 +72,11 @@ plt.show()
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // 添加图形操作相关状态
+  const [zoomLevel, setZoomLevel] = useState(100);
+  const [isPanning, setIsPanning] = useState(false);
+  const [showTools, setShowTools] = useState(false);
 
   // Function to run the code
   const runCode = async () => {
@@ -179,6 +184,43 @@ console.log("Hello from JavaScript!");
     setCode(getDefaultCode(selectedLanguage));
   }, [selectedLanguage]);
 
+  // 图形操作函数
+  const handleZoomIn = () => {
+    setZoomLevel(prev => Math.min(prev + 10, 200));
+  };
+
+  const handleZoomOut = () => {
+    setZoomLevel(prev => Math.max(prev - 10, 50));
+  };
+
+  const handleResetZoom = () => {
+    setZoomLevel(100);
+  };
+
+  const handleTogglePanning = () => {
+    setIsPanning(!isPanning);
+  };
+
+  const handleDownloadImage = () => {
+    // 获取可视化区域的图片
+    const visualizationDiv = document.querySelector('#python-visualization img');
+    if (visualizationDiv) {
+      // 创建一个临时链接来下载图片
+      const link = document.createElement('a');
+      link.href = (visualizationDiv as HTMLImageElement).src;
+      link.download = 'visualization.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      toast({
+        variant: "destructive",
+        title: "无法下载",
+        description: "没有找到可下载的图形",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -208,25 +250,90 @@ console.log("Hello from JavaScript!");
                     </div>
                     <Separator className="mb-4" />
                     <div id="visualization-container" className="flex flex-col h-full" ref={visualizationRef}>
-                      {/* Python visualization output */}
-                      <div id="python-visualization" className="w-full h-[60%] overflow-auto bg-theme-dark/30 rounded-md p-2 mb-4">
+                      {/* Python visualization output - 去掉边框，改为简洁设计 */}
+                      <div id="python-visualization" className="w-full h-[60%] relative overflow-auto bg-theme-dark/30 rounded-md p-2 mb-5 custom-scrollbar">
+                        {/* 直接悬浮的图形操作工具栏 */}
+                        <div className="absolute top-2 right-2 z-10 bg-theme-dark/80 backdrop-blur-sm border border-theme-stone/30 rounded-md shadow-lg cursor-move py-1 px-1">
+                          <div className="flex items-center gap-1">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={handleZoomIn}
+                              className="h-7 w-7 p-0 flex items-center justify-center rounded-full"
+                            >
+                              <ZoomIn className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={handleZoomOut}
+                              className="h-7 w-7 p-0 flex items-center justify-center rounded-full"
+                            >
+                              <ZoomOut className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={handleResetZoom}
+                              className="h-7 w-7 p-0 flex items-center justify-center rounded-full"
+                            >
+                              <RotateCw className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button 
+                              variant={isPanning ? "secondary" : "ghost"}
+                              size="sm" 
+                              onClick={handleTogglePanning}
+                              className="h-7 w-7 p-0 flex items-center justify-center rounded-full"
+                            >
+                              <Move className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={handleDownloadImage}
+                              className="h-7 w-7 p-0 flex items-center justify-center rounded-full"
+                            >
+                              <Download className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        {/* 图形显示区域 */}
                         {visualOutput && (
                           <div 
-                            className="py-2 flex justify-center items-center w-full h-full"
-                            dangerouslySetInnerHTML={{ __html: visualOutput }} 
-                          />
+                            className={`flex justify-center items-center w-full h-full ${isPanning ? 'cursor-move' : ''}`}
+                          >
+                            <div 
+                              style={{ 
+                                transform: `scale(${zoomLevel/100})`,
+                                transition: 'transform 0.2s ease' 
+                              }}
+                              className="transform-origin-center"
+                              dangerouslySetInnerHTML={{ __html: visualOutput }} 
+                            />
+                          </div>
                         )}
                       </div>
                       
                       {/* Canvas for JavaScript output */}
                       <canvas id="js-canvas" className="w-full h-3/5 bg-white rounded-md p-2 mb-4 hidden" width="800" height="300"></canvas>
                       
-                      {/* Text output area */}
-                      <div className="w-full h-[35%] overflow-auto bg-theme-dark/70 rounded-md p-2 font-mono text-sm text-theme-cream">
-                        <OutputViewer 
-                          output={textOutput} 
-                          isRunning={isRunning} 
-                        />
+                      {/* Text output area - 简化为单层窗口，去除重复的终端风格顶部 */}
+                      <div className="w-full h-[35%] bg-theme-dark/70 rounded-md overflow-hidden border border-theme-stone/30">
+                        <div className="flex items-center bg-theme-navy/50 px-3 py-1.5 text-sm rounded-t-md border-b border-theme-stone/30">
+                          <div className="flex space-x-1.5">
+                            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                            <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                          </div>
+                          <span className="ml-2 text-xs text-theme-stone">Terminal</span>
+                        </div>
+                        <div className="p-2 h-[calc(100%-30px)] overflow-auto custom-scrollbar">
+                          <OutputViewer 
+                            output={textOutput} 
+                            isRunning={isRunning} 
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
