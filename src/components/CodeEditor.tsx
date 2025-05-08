@@ -1,46 +1,69 @@
-
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
+import * as monaco from 'monaco-editor';
 
 interface CodeEditorProps {
   language: string;
   value: string;
-  onChange: (code: string) => void;
+  onChange: (value: string) => void;
 }
 
-export const CodeEditor = ({ language, value, onChange }: CodeEditorProps) => {
+export const CodeEditor: React.FC<CodeEditorProps> = ({
+  language,
+  value,
+  onChange
+}) => {
   const editorRef = useRef<HTMLDivElement>(null);
-  
-  useEffect(() => {
-    // In a real implementation, you would initialize a code editor like Monaco Editor
-    // For this demo, we're using a styled textarea
-    if (editorRef.current) {
-      const textarea = document.createElement('textarea');
-      textarea.value = value;
-      textarea.className = 'w-full h-full p-4 bg-theme-dark/80 text-theme-cream font-mono text-sm rounded-md border border-theme-stone/20 resize-none';
-      textarea.style.minHeight = '300px';
-      textarea.addEventListener('input', (e) => {
-        onChange((e.target as HTMLTextAreaElement).value);
-      });
-      
-      // Clear and append
-      editorRef.current.innerHTML = '';
-      editorRef.current.appendChild(textarea);
-    }
-    
-    return () => {
-      // Cleanup if needed
-    };
-  }, [language]); // Re-initialize when language changes
+  const monacoEditor = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
   useEffect(() => {
-    // Update value when it changes externally
     if (editorRef.current) {
-      const textarea = editorRef.current.querySelector('textarea');
-      if (textarea && textarea.value !== value) {
-        textarea.value = value;
-      }
+      // 初始化编辑器
+      monacoEditor.current = monaco.editor.create(editorRef.current, {
+        value,
+        language,
+        theme: 'vs-dark',
+        automaticLayout: true,
+        minimap: { enabled: true },
+        scrollBeyondLastLine: false,
+        fontFamily: 'Menlo, Monaco, "Courier New", monospace',
+        fontSize: 14,
+        tabSize: 2,
+      });
+
+      // 监听内容变化
+      monacoEditor.current.onDidChangeModelContent(() => {
+        const newValue = monacoEditor.current?.getValue();
+        if (newValue !== undefined) {
+          onChange(newValue);
+        }
+      });
+
+      // 清理函数
+      return () => {
+        monacoEditor.current?.dispose();
+      };
+    }
+  }, [editorRef, language]);
+
+  // 当外部value改变时，更新编辑器内容
+  useEffect(() => {
+    // 如果编辑器已创建且值不一致，则更新
+    if (monacoEditor.current && monacoEditor.current.getValue() !== value) {
+      monacoEditor.current.setValue(value);
     }
   }, [value]);
 
-  return <div ref={editorRef} className="h-full" />;
+  // 当语言改变时，更新编辑器语言
+  useEffect(() => {
+    if (monacoEditor.current) {
+      monaco.editor.setModelLanguage(
+        monacoEditor.current.getModel()!,
+        language
+      );
+    }
+  }, [language]);
+
+  return (
+    <div ref={editorRef} className="h-full w-full border border-theme-stone/10 rounded-md overflow-hidden" />
+  );
 };

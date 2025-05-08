@@ -16,9 +16,6 @@ import { OutputViewer } from '@/components/OutputViewer';
 import { TaskList } from '@/components/TaskList';
 import { AIAssistant } from '@/components/AIAssistant';
 import { useToast } from '@/hooks/use-toast';
-// 删除导入 Brython 的语句，我们将使用脚本动态加载
-// import 'brython';
-// import 'brython/brython_stdlib';
 
 // 声明 window 上的 Brython 类型
 declare global {
@@ -57,7 +54,7 @@ try:
         div <= square
     
     # 输出到文档
-    document["python-output"] <= div
+    document["python-visualization"] <= div
     
     print("图形已创建成功！")
 except Exception as e:
@@ -73,12 +70,14 @@ except Exception as e:
       content: "Hi there! I'm your coding assistant. Ask me any programming questions or get help with your code."
     }
   ]);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const outputRef = useRef<HTMLDivElement>(null);
-  const pythonOutputRef = useRef<HTMLDivElement>(null);
+  const pythonVisualizationRef = useRef<HTMLDivElement>(null);
   const brythonInitialized = useRef(false);
   const brythonScriptsLoaded = useRef(false);
+  const jsCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // 初始化 Brython
   useEffect(() => {
@@ -145,6 +144,11 @@ except Exception as e:
     };
   }, []);
 
+  // 初始引用 JavaScript 画布
+  useEffect(() => {
+    jsCanvasRef.current = document.getElementById('js-canvas') as HTMLCanvasElement;
+  }, []);
+
   // Tasks for the current learning module
   const [tasks, setTasks] = useState([
     { id: 1, title: "Create a basic plot", completed: false },
@@ -164,102 +168,160 @@ except Exception as e:
     setIsRunning(true);
     setOutput("");
     
+    // 清空可视化区域
+    if (pythonVisualizationRef.current) {
+      pythonVisualizationRef.current.innerHTML = '';
+    }
+    
     if (selectedLanguage === "python") {
-      try {
-        // 清空现有输出
-        if (pythonOutputRef.current) {
-          pythonOutputRef.current.innerHTML = '';
+      runPythonCode();
+    } else {
+      runJavaScriptCode();
+    }
+  };
+  
+  // Python 代码执行函数
+  const runPythonCode = () => {
+    try {
+      if (!brythonInitialized.current) {
+        // 如果Brython未初始化，先尝试初始化
+        try {
+          window.brython && window.brython(1);
+          brythonInitialized.current = true;
+        } catch (err) {
+          console.error('无法初始化Brython:', err);
+          setOutput(`初始化错误: ${err instanceof Error ? err.message : String(err)}`);
+          setIsRunning(false);
+          return;
         }
+      }
 
-        if (!brythonInitialized.current) {
-          // 如果Brython未初始化，先尝试初始化
-          try {
-            window.brython && window.brython(1);
-            brythonInitialized.current = true;
-          } catch (err) {
-            console.error('无法初始化Brython:', err);
-            setOutput(`初始化错误: ${err instanceof Error ? err.message : String(err)}`);
-            setIsRunning(false);
-            return;
-          }
+      // 确保可视化区域已清空并存在
+      if (document.getElementById('python-visualization')) {
+        document.getElementById('python-visualization')!.innerHTML = '';
+      } else {
+        // 如果不存在，创建可视化区域
+        const visualDiv = document.createElement('div');
+        visualDiv.id = 'python-visualization';
+        visualDiv.className = 'w-full h-3/5 overflow-auto bg-theme-dark/30 rounded-md p-2';
+        const visualizationContainer = document.getElementById('visualization-container');
+        if (visualizationContainer) {
+          visualizationContainer.appendChild(visualDiv);
         }
+      }
 
-        // 创建新的 Python 代码执行环境
-        const execScript = document.createElement('script');
-        execScript.id = 'python-exec';
-        execScript.type = 'text/python';
-        execScript.innerHTML = `
+      // 创建新的 Python 代码执行环境
+      const execScript = document.createElement('script');
+      execScript.id = 'python-exec';
+      execScript.type = 'text/python';
+      execScript.innerHTML = `
 import sys
 from browser import document, window, html
 try:
+    # 确保可视化区域存在
+    if not document.getElementById('python-visualization'):
+        vis_div = html.DIV(id="python-visualization")
+        vis_div.style = {"width": "100%", "height": "100%", "overflow": "auto"}
+        document.body.appendChild(vis_div)
+    
+    # 执行用户代码
     ${code}
 except Exception as e:
     print(f"Error: {str(e)}")
 `;
-        
-        // 移除旧的执行脚本（如果存在）
-        const oldScript = document.getElementById('python-exec');
-        if (oldScript) {
-          oldScript.remove();
-        }
-
-        // 添加新脚本并执行
-        document.body.appendChild(execScript);
-        
-        // 使用 setTimeout 确保 DOM 已更新后再执行
-        setTimeout(() => {
-          try {
-            window.brython && window.brython();
-            toast({
-              title: "代码执行成功",
-              description: "Python 代码已执行完毕",
-            });
-          } catch (err) {
-            console.error('执行错误:', err);
-            setOutput(`执行错误: ${err.message || String(err)}`);
-          } finally {
-            setIsRunning(false);
-          }
-        }, 50);
-      } catch (error) {
-        setOutput(`错误: ${error instanceof Error ? error.message : String(error)}`);
-        toast({
-          variant: "destructive",
-          title: "执行失败",
-          description: "Python 代码执行失败",
-        });
-        setIsRunning(false);
+      
+      // 移除旧的执行脚本（如果存在）
+      const oldScript = document.getElementById('python-exec');
+      if (oldScript) {
+        oldScript.remove();
       }
-    } else {
-      // JavaScript 代码执行保持不变
-      try {
-        const result = eval(`(function() { 
+
+      // 添加新脚本并执行
+      document.body.appendChild(execScript);
+      
+      // 使用 setTimeout 确保 DOM 已更新后再执行
+      setTimeout(() => {
+        try {
+          window.brython && window.brython();
+          toast({
+            title: "代码执行成功",
+            description: "Python 代码已执行完毕",
+          });
+        } catch (err) {
+          console.error('执行错误:', err);
+          setOutput(prev => prev + `\n执行错误: ${err instanceof Error ? err.message : String(err)}`);
+        } finally {
+          setIsRunning(false);
+        }
+      }, 50);
+    } catch (error) {
+      setOutput(`错误: ${error instanceof Error ? error.message : String(error)}`);
+      toast({
+        variant: "destructive",
+        title: "执行失败",
+        description: "Python 代码执行失败",
+      });
+      setIsRunning(false);
+    }
+  };
+  
+  // JavaScript 代码执行函数
+  const runJavaScriptCode = () => {
+    // 显示 JavaScript 画布，隐藏 Python 可视化区域
+    if (jsCanvasRef.current) {
+      jsCanvasRef.current.classList.remove('hidden');
+    }
+    
+    if (document.getElementById('python-visualization')) {
+      document.getElementById('python-visualization')!.classList.add('hidden');
+    }
+    
+    try {
+      // 为代码提供画布上下文
+      const canvas = jsCanvasRef.current;
+      const ctx = canvas?.getContext('2d');
+      
+      // 清空画布
+      if (ctx && canvas) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      
+      // 执行 JavaScript 代码
+      const wrappedCode = `
+        (function() { 
           try {
+            // 提供 canvas 变量
+            const canvas = document.getElementById('js-canvas');
+            const ctx = canvas.getContext('2d');
+            
             ${code}
-            return { success: true, output: "Code executed successfully" };
+            
+            return { success: true, output: "代码执行成功" };
           } catch(e) {
             return { success: false, output: e.toString() };
           }
-        })()`);
-        
-        setOutput(result.output);
-        
-        if (result.success) {
-          toast({
-            title: "代码执行成功",
-            description: "您的 JavaScript 代码已成功执行。",
-          });
-        }
-      } catch (error) {
-        setOutput(`错误: ${error instanceof Error ? error.message : String(error)}`);
+        })()
+      `;
+      
+      const result = eval(wrappedCode);
+      
+      setOutput(result.output);
+      
+      if (result.success) {
         toast({
-          variant: "destructive",
-          title: "执行失败",
-          description: "执行代码时出现错误。",
+          title: "代码执行成功",
+          description: "您的 JavaScript 代码已成功执行。",
         });
-      } finally {
-        setIsRunning(false);
       }
+    } catch (error) {
+      setOutput(`错误: ${error instanceof Error ? error.message : String(error)}`);
+      toast({
+        variant: "destructive",
+        title: "执行失败",
+        description: "执行代码时出现错误。",
+      });
+    } finally {
+      setIsRunning(false);
     }
   };
 
@@ -302,13 +364,77 @@ except Exception as e:
     ));
   };
 
+  // 设置不同语言的默认代码
+  const getDefaultCode = (language: string) => {
+    if (language === 'python') {
+      return code;
+    } else {
+      return `// JavaScript 交互式图形示例
+const canvas = document.getElementById('js-canvas');
+const ctx = canvas.getContext('2d');
+
+// 清空画布
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+// 创建一个简单的动画
+let x = 0;
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // 绘制标题
+  ctx.font = '20px Arial';
+  ctx.fillStyle = '#9b87f5';
+  ctx.fillText('JavaScript Animation Demo', 20, 30);
+  
+  // 绘制彩色圆形
+  const colors = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#1A535C', '#F38181'];
+  for (let i = 0; i < 5; i++) {
+    ctx.beginPath();
+    ctx.arc(x + i*80, 100 + Math.sin(x/20 + i)*30, 20, 0, Math.PI * 2);
+    ctx.fillStyle = colors[i];
+    ctx.fill();
+  }
+  
+  // 移动动画
+  x = (x + 2) % (canvas.width + 100);
+  
+  // 继续动画循环
+  requestAnimationFrame(animate);
+}
+
+// 启动动画
+animate();
+console.log('动画已开始运行');`;
+    }
+  };
+
+  // 语言切换时更新代码
+  useEffect(() => {
+    setCode(getDefaultCode(selectedLanguage));
+    
+    // 切换可视化区域显示
+    if (selectedLanguage === 'python') {
+      if (document.getElementById('python-visualization')) {
+        document.getElementById('python-visualization')!.classList.remove('hidden');
+      }
+      if (jsCanvasRef.current) {
+        jsCanvasRef.current.classList.add('hidden');
+      }
+    } else {
+      if (document.getElementById('python-visualization')) {
+        document.getElementById('python-visualization')!.classList.add('hidden');
+      }
+      if (jsCanvasRef.current) {
+        jsCanvasRef.current.classList.remove('hidden');
+      }
+    }
+  }, [selectedLanguage]);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       
       <main className="flex-grow pt-16 pb-0 bg-theme-dark">
-        {/* 移除内联脚本标签，我们在 useEffect 中动态添加它们 */}
-        
         <div className="container mx-auto px-0 h-[calc(100vh-8rem)]">
           <h1 className="text-2xl font-bold mb-4 px-4 text-theme-cream">Interactive Coding Environment</h1>
           
@@ -332,14 +458,20 @@ except Exception as e:
                       </div>
                     </div>
                     <Separator className="mb-4" />
-                    <div className="flex flex-col h-full">
-                      <OutputViewer output={output} isRunning={isRunning} />
-                      {/* 添加一个容器用于 Brython 图形输出 */}
-                      <div 
-                        id="python-output" 
-                        ref={pythonOutputRef} 
-                        className="mt-4 p-2 rounded-md overflow-auto bg-white/5 flex-grow"
-                      ></div>
+                    <div id="visualization-container" className="flex flex-col h-full">
+                      {/* Python visualization output */}
+                      <div id="python-visualization" className="w-full h-3/5 overflow-auto bg-theme-dark/30 rounded-md p-2 mb-4"></div>
+                      
+                      {/* Canvas for JavaScript output */}
+                      <canvas id="js-canvas" className="w-full h-3/5 bg-white rounded-md p-2 mb-4 hidden" width="800" height="300"></canvas>
+                      
+                      {/* Text output area */}
+                      <div className="w-full h-2/5 overflow-auto bg-theme-dark/70 rounded-md p-2 font-mono text-sm text-theme-cream">
+                        <OutputViewer 
+                          output={output} 
+                          isRunning={isRunning} 
+                        />
+                      </div>
                     </div>
                   </div>
                 </ResizablePanel>
@@ -395,25 +527,7 @@ except Exception as e:
                           <div className="flex-grow h-full overflow-hidden">
                             <CodeEditor 
                               language="javascript"
-                              value={`// JavaScript code example
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-
-// Create a simple animation
-let x = 0;
-function animate() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-  ctx.arc(x, 100, 20, 0, Math.PI * 2);
-  ctx.fillStyle = '#9b87f5';
-  ctx.fill();
-  
-  x = (x + 2) % canvas.width;
-  requestAnimationFrame(animate);
-}
-
-animate();
-console.log('Animation started');`}
+                              value={code}
                               onChange={setCode}
                             />
                           </div>
