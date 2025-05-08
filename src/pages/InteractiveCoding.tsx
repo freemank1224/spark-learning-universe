@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { 
@@ -10,55 +10,36 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Play, Code, Terminal, Circle, CheckCircle, HelpCircle, Send } from 'lucide-react';
+import { Play, HelpCircle, Send, Circle } from 'lucide-react';
 import { CodeEditor } from '@/components/CodeEditor';
 import { OutputViewer } from '@/components/OutputViewer';
 import { TaskList } from '@/components/TaskList';
 import { AIAssistant } from '@/components/AIAssistant';
 import { useToast } from '@/hooks/use-toast';
-
-// 声明 window 上的 Brython 类型
-declare global {
-  interface Window {
-    __BRYTHON__: any;
-    brython: any;
-    pythonExec: any;
-  }
-}
+import { executeCode } from '@/services/codeExecutionService';
 
 const InteractiveCoding = () => {
   const [code, setCode] = useState(`# Welcome to Interactive Python Coding
 # Try running this simple example
 
-print("Hello from Brython!")
+print("Hello from Python!")
 for i in range(5):
     print(f"Number {i} squared is {i**2}")
 
-# 尝试一些基础图形
-try:
-    from browser import document, html
-    # 创建一个简单的图形
-    div = html.DIV(id="graphic")
-    div.style = {"width": "100%", "height": "200px", "background": "#f0f0f0", "margin-top": "10px"}
-    
-    # 添加一些彩色方块
-    for i in range(5):
-        square = html.DIV()
-        square.style = {
-            "width": "50px", 
-            "height": "50px",
-            "background": f"rgb({i*50}, {255-i*40}, {i*30})",
-            "display": "inline-block",
-            "margin": "10px"
-        }
-        div <= square
-    
-    # 输出到文档
-    document["python-visualization"] <= div
-    
-    print("图形已创建成功！")
-except Exception as e:
-    print(f"创建图形时出错: {e}")
+# 尝试绘制一个简单的图表
+import matplotlib.pyplot as plt
+import numpy as np
+
+x = np.linspace(0, 10, 100)
+y = np.sin(x)
+
+plt.figure(figsize=(8, 4))
+plt.plot(x, y)
+plt.title("Sin Wave")
+plt.xlabel("X axis")
+plt.ylabel("Y axis")
+plt.grid(True)
+plt.show()
 `);
   const [output, setOutput] = useState("");
   const [isRunning, setIsRunning] = useState(false);
@@ -73,81 +54,6 @@ except Exception as e:
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  const outputRef = useRef<HTMLDivElement>(null);
-  const pythonVisualizationRef = useRef<HTMLDivElement>(null);
-  const brythonInitialized = useRef(false);
-  const brythonScriptsLoaded = useRef(false);
-  const jsCanvasRef = useRef<HTMLCanvasElement | null>(null);
-
-  // 初始化 Brython
-  useEffect(() => {
-    // 如果脚本已加载，不再重复加载
-    if (brythonScriptsLoaded.current) return;
-    brythonScriptsLoaded.current = true;
-
-    // 创建并加载 Brython 核心脚本
-    const brythonScript = document.createElement('script');
-    brythonScript.type = 'text/javascript';
-    brythonScript.src = '/brython/brython.js';
-    brythonScript.async = true;
-    
-    // 创建并加载 Brython 标准库脚本
-    const stdlibScript = document.createElement('script');
-    stdlibScript.type = 'text/javascript';
-    stdlibScript.src = '/brython/brython_stdlib.js';
-    stdlibScript.async = true;
-    
-    // Brython 核心脚本加载完成后加载标准库
-    brythonScript.onload = () => {
-      document.head.appendChild(stdlibScript);
-    };
-    
-    // 标准库加载完成后初始化 Brython
-    stdlibScript.onload = () => {
-      try {
-        if (window.brython) {
-          window.brython(1);
-          brythonInitialized.current = true;
-          console.log('Brython initialized successfully');
-
-          // 设置输出重定向
-          if (window.__BRYTHON__) {
-            window.__BRYTHON__.stdout.write = (text) => {
-              setOutput(prev => prev + text);
-            };
-            window.__BRYTHON__.stderr.write = (text) => {
-              setOutput(prev => prev + `Error: ${text}`);
-            };
-          }
-        } else {
-          console.error('Brython not available after loading scripts');
-        }
-      } catch (err) {
-        console.error('Brython initialization failed:', err);
-      }
-    };
-    
-    // 添加脚本到文档头部
-    document.head.appendChild(brythonScript);
-    
-    return () => {
-      // 清理函数：移除所有添加的脚本
-      if (brythonInitialized.current) {
-        brythonInitialized.current = false;
-      }
-      if (document.head.contains(brythonScript)) {
-        document.head.removeChild(brythonScript);
-      }
-      if (document.head.contains(stdlibScript)) {
-        document.head.removeChild(stdlibScript);
-      }
-    };
-  }, []);
-
-  // 初始引用 JavaScript 画布
-  useEffect(() => {
-    jsCanvasRef.current = document.getElementById('js-canvas') as HTMLCanvasElement;
-  }, []);
 
   // Tasks for the current learning module
   const [tasks, setTasks] = useState([
@@ -164,153 +70,58 @@ except Exception as e:
   }, [messages]);
 
   // Function to run the code
-  const runCode = () => {
-    setIsRunning(true);
-    setOutput("");
-    
-    // 清空可视化区域
-    if (pythonVisualizationRef.current) {
-      pythonVisualizationRef.current.innerHTML = '';
-    }
-    
-    if (selectedLanguage === "python") {
-      runPythonCode();
-    } else {
-      runJavaScriptCode();
-    }
-  };
-  
-  // Python 代码执行函数
-  const runPythonCode = () => {
-    try {
-      if (!brythonInitialized.current) {
-        // 如果Brython未初始化，先尝试初始化
-        try {
-          window.brython && window.brython(1);
-          brythonInitialized.current = true;
-        } catch (err) {
-          console.error('无法初始化Brython:', err);
-          setOutput(`初始化错误: ${err instanceof Error ? err.message : String(err)}`);
-          setIsRunning(false);
-          return;
-        }
-      }
-
-      // 确保可视化区域已清空并存在
-      if (document.getElementById('python-visualization')) {
-        document.getElementById('python-visualization')!.innerHTML = '';
-      } else {
-        // 如果不存在，创建可视化区域
-        const visualDiv = document.createElement('div');
-        visualDiv.id = 'python-visualization';
-        visualDiv.className = 'w-full h-3/5 overflow-auto bg-theme-dark/30 rounded-md p-2';
-        const visualizationContainer = document.getElementById('visualization-container');
-        if (visualizationContainer) {
-          visualizationContainer.appendChild(visualDiv);
-        }
-      }
-
-      // 创建新的 Python 代码执行环境
-      const execScript = document.createElement('script');
-      execScript.id = 'python-exec';
-      execScript.type = 'text/python';
-      execScript.innerHTML = `
-import sys
-from browser import document, window, html
-try:
-    # 确保可视化区域存在
-    if not document.getElementById('python-visualization'):
-        vis_div = html.DIV(id="python-visualization")
-        vis_div.style = {"width": "100%", "height": "100%", "overflow": "auto"}
-        document.body.appendChild(vis_div)
-    
-    # 执行用户代码
-    ${code}
-except Exception as e:
-    print(f"Error: {str(e)}")
-`;
-      
-      // 移除旧的执行脚本（如果存在）
-      const oldScript = document.getElementById('python-exec');
-      if (oldScript) {
-        oldScript.remove();
-      }
-
-      // 添加新脚本并执行
-      document.body.appendChild(execScript);
-      
-      // 使用 setTimeout 确保 DOM 已更新后再执行
-      setTimeout(() => {
-        try {
-          window.brython && window.brython();
-          toast({
-            title: "代码执行成功",
-            description: "Python 代码已执行完毕",
-          });
-        } catch (err) {
-          console.error('执行错误:', err);
-          setOutput(prev => prev + `\n执行错误: ${err instanceof Error ? err.message : String(err)}`);
-        } finally {
-          setIsRunning(false);
-        }
-      }, 50);
-    } catch (error) {
-      setOutput(`错误: ${error instanceof Error ? error.message : String(error)}`);
+  const runCode = async () => {
+    if (!code.trim()) {
       toast({
         variant: "destructive",
-        title: "执行失败",
-        description: "Python 代码执行失败",
+        title: "空代码",
+        description: "请先输入一些代码再执行",
       });
-      setIsRunning(false);
+      return;
     }
-  };
-  
-  // JavaScript 代码执行函数
-  const runJavaScriptCode = () => {
-    // 显示 JavaScript 画布，隐藏 Python 可视化区域
-    if (jsCanvasRef.current) {
-      jsCanvasRef.current.classList.remove('hidden');
-    }
-    
-    if (document.getElementById('python-visualization')) {
-      document.getElementById('python-visualization')!.classList.add('hidden');
-    }
+
+    setIsRunning(true);
+    setOutput("正在执行代码，请稍候...");
     
     try {
-      // 为代码提供画布上下文
-      const canvas = jsCanvasRef.current;
-      const ctx = canvas?.getContext('2d');
-      
-      // 清空画布
-      if (ctx && canvas) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-      }
-      
-      // 执行 JavaScript 代码
-      const wrappedCode = `
-        (function() { 
-          try {
-            // 提供 canvas 变量
-            const canvas = document.getElementById('js-canvas');
-            const ctx = canvas.getContext('2d');
-            
-            ${code}
-            
-            return { success: true, output: "代码执行成功" };
-          } catch(e) {
-            return { success: false, output: e.toString() };
+      if (selectedLanguage === "python") {
+        // 调用后端执行Python代码
+        const result = await executeCode(code);
+        
+        // 处理结果
+        let formattedOutput = '';
+        
+        // 添加标准输出
+        if (result.output) {
+          formattedOutput += `<div class="console-output">${result.output.replace(/\n/g, '<br>')}</div>`;
+        }
+        
+        // 添加错误输出
+        if (result.error) {
+          formattedOutput += `<div class="error-output">${result.error.replace(/\n/g, '<br>')}</div>`;
+        }
+        
+        // 添加图形输出
+        if (result.figures && result.figures.length > 0) {
+          formattedOutput += '<div class="graphics-output">';
+          for (const figure of result.figures) {
+            formattedOutput += `<img src="data:image/png;base64,${figure.data}" alt="Figure ${figure.filename}" style="max-width: 100%; margin: 10px 0;" />`;
           }
-        })()
-      `;
-      
-      const result = eval(wrappedCode);
-      
-      setOutput(result.output);
-      
-      if (result.success) {
+          formattedOutput += '</div>';
+        }
+        
+        setOutput(formattedOutput);
+        
         toast({
           title: "代码执行成功",
-          description: "您的 JavaScript 代码已成功执行。",
+          description: "Python 代码已执行完毕",
+        });
+      } else {
+        // 如果是JavaScript代码（可以后续实现）
+        toast({
+          variant: "destructive",
+          title: "未实现",
+          description: "JavaScript执行功能暂未实现",
         });
       }
     } catch (error) {
@@ -318,7 +129,7 @@ except Exception as e:
       toast({
         variant: "destructive",
         title: "执行失败",
-        description: "执行代码时出现错误。",
+        description: "代码执行过程中出现错误",
       });
     } finally {
       setIsRunning(false);
@@ -369,65 +180,15 @@ except Exception as e:
     if (language === 'python') {
       return code;
     } else {
-      return `// JavaScript 交互式图形示例
-const canvas = document.getElementById('js-canvas');
-const ctx = canvas.getContext('2d');
-
-// 清空画布
-ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-// 创建一个简单的动画
-let x = 0;
-function animate() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
-  // 绘制标题
-  ctx.font = '20px Arial';
-  ctx.fillStyle = '#9b87f5';
-  ctx.fillText('JavaScript Animation Demo', 20, 30);
-  
-  // 绘制彩色圆形
-  const colors = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#1A535C', '#F38181'];
-  for (let i = 0; i < 5; i++) {
-    ctx.beginPath();
-    ctx.arc(x + i*80, 100 + Math.sin(x/20 + i)*30, 20, 0, Math.PI * 2);
-    ctx.fillStyle = colors[i];
-    ctx.fill();
-  }
-  
-  // 移动动画
-  x = (x + 2) % (canvas.width + 100);
-  
-  // 继续动画循环
-  requestAnimationFrame(animate);
-}
-
-// 启动动画
-animate();
-console.log('动画已开始运行');`;
+      return `// JavaScript代码目前不支持执行
+console.log("Hello from JavaScript!");
+// 请使用Python代码进行执行`;
     }
   };
 
   // 语言切换时更新代码
   useEffect(() => {
     setCode(getDefaultCode(selectedLanguage));
-    
-    // 切换可视化区域显示
-    if (selectedLanguage === 'python') {
-      if (document.getElementById('python-visualization')) {
-        document.getElementById('python-visualization')!.classList.remove('hidden');
-      }
-      if (jsCanvasRef.current) {
-        jsCanvasRef.current.classList.add('hidden');
-      }
-    } else {
-      if (document.getElementById('python-visualization')) {
-        document.getElementById('python-visualization')!.classList.add('hidden');
-      }
-      if (jsCanvasRef.current) {
-        jsCanvasRef.current.classList.remove('hidden');
-      }
-    }
   }, [selectedLanguage]);
 
   return (

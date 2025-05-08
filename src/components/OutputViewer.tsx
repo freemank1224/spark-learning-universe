@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import DOMPurify from 'dompurify';
 
 interface OutputViewerProps {
   output: string;
@@ -9,56 +10,49 @@ interface OutputViewerProps {
 export const OutputViewer = ({ output, isRunning }: OutputViewerProps) => {
   const outputContainerRef = useRef<HTMLDivElement>(null);
   const [hasVisuals, setHasVisuals] = useState(false);
+  const [sanitizedOutput, setSanitizedOutput] = useState<string>('');
   
+  // 处理输出内容
   useEffect(() => {
-    // 检测输出中是否包含可视化内容
-    const containsVisuals = output && (
-      output.includes('<img') || 
-      output.includes('<svg') || 
-      output.includes('<canvas') || 
-      output.includes('<div') ||
-      output.includes('<matplotlib')
-    );
-    
-    setHasVisuals(containsVisuals);
-    
-    // 处理输出显示
-    if (!isRunning && output && outputContainerRef.current) {
-      if (containsVisuals) {
-        try {
-          // 安全地渲染HTML内容
-          const sanitized = output
-            .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')  // 移除脚本标签
-            .replace(/on\w+="[^"]*"/g, '');  // 移除事件处理器
-            
-          outputContainerRef.current.innerHTML = sanitized;
-          
-          // 查找并处理可能生成的图表
-          const imgs = outputContainerRef.current.querySelectorAll('img');
-          imgs.forEach(img => {
-            // 确保图片正确加载
-            img.style.maxWidth = '100%';
-            img.onerror = () => {
-              console.error('Image failed to load:', img.src);
-            };
-          });
-        } catch (e) {
-          console.error("Error rendering visual output:", e);
-          outputContainerRef.current.textContent = `Error rendering output: ${e instanceof Error ? e.message : String(e)}`;
-        }
-      } else {
-        // 纯文本输出
-        outputContainerRef.current.textContent = output;
+    if (!isRunning && output) {
+      // 检测输出中是否包含可视化内容
+      const containsVisuals = output && (
+        output.includes('<img') || 
+        output.includes('<svg') || 
+        output.includes('<canvas') || 
+        output.includes('<div class="graphics-output">') ||
+        output.includes('<matplotlib')
+      );
+      
+      setHasVisuals(containsVisuals);
+      
+      try {
+        // 使用 DOMPurify 安全地处理 HTML
+        const sanitized = DOMPurify.sanitize(output);
+        setSanitizedOutput(sanitized);
+      } catch (e) {
+        console.error("Error sanitizing output:", e);
+        setSanitizedOutput(`Error rendering output: ${e instanceof Error ? e.message : String(e)}`);
       }
     }
   }, [output, isRunning]);
 
-  // 自动滚动到底部
+  // 应用样式到图像和处理滚动
   useEffect(() => {
-    if (outputContainerRef.current) {
+    if (outputContainerRef.current && sanitizedOutput) {
+      // 处理图像
+      const imgs = outputContainerRef.current.querySelectorAll('img');
+      imgs.forEach(img => {
+        img.style.maxWidth = '100%';
+        img.onerror = () => {
+          console.error('Image failed to load:', img.src);
+        };
+      });
+      
+      // 自动滚动到底部
       outputContainerRef.current.scrollTop = outputContainerRef.current.scrollHeight;
     }
-  }, [output]);
+  }, [sanitizedOutput]);
 
   return (
     <div className="w-full h-full flex flex-col">
@@ -75,13 +69,16 @@ export const OutputViewer = ({ output, isRunning }: OutputViewerProps) => {
         ref={outputContainerRef}
         className="flex-grow p-3 overflow-auto font-mono text-sm text-theme-cream bg-theme-dark/70 whitespace-pre-wrap"
       >
-        {output || (
+        {isRunning ? (
+          <div className="text-theme-stone italic">
+            正在执行代码... <span className="inline-block ml-1 animate-pulse">|</span>
+          </div>
+        ) : sanitizedOutput ? (
+          <div dangerouslySetInnerHTML={{ __html: sanitizedOutput }} />
+        ) : (
           <span className="text-theme-stone italic">
-            {isRunning ? '正在执行代码...' : '运行代码以查看输出...'}
+            运行代码以查看输出...
           </span>
-        )}
-        {isRunning && (
-          <div className="inline-block ml-1 animate-pulse">|</div>
         )}
       </div>
     </div>
